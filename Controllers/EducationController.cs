@@ -1,63 +1,135 @@
-﻿using System.Diagnostics.Eventing.Reader;
+﻿using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Xml.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
     [ApiController]
+    [Route("api/[controller]")]
     public class EducationController : ControllerBase
     {
-        [HttpGet("api/educations")]
-        public List<Education> GetEducations()
+        private readonly Database _db;
+
+        public EducationController(Database db)
         {
-            return new List<Education>
-            {
-                new Education(1, "Bachelor of Science in Computer Science", "University of Example", new DateOnly(2015, 9, 1), new DateOnly(2019, 6, 30)),
-                new Education(2, "Master of Science in Software Engineering", "Example University", new DateOnly(2020, 9, 1), null)
-            };
+            _db = db;
         }
 
-        [HttpGet("api/educations/{id}")]
-        public ActionResult<Education> GetEducationById(int id)
+        [HttpGet()]
+        public async Task<ActionResult<List<Education>>> GetEducations()
         {
-            var educations = GetEducations();
-            var education = educations.FirstOrDefault(e => e.Id == id);
-            if (education == null)
+            var table = await _db.ExecuteQueryAsync("SELECT * FROM Education", new());
+
+            var list = new List<Education>();
+            foreach (DataRow row in table.Rows)
+            {
+                list.Add(new Education(
+                    Convert.ToInt32(row["Id"]),
+                    row["Degree"].ToString(),
+                    row["Institution"].ToString(),
+                    DateOnly.FromDateTime(Convert.ToDateTime(row["StartDate"])),
+                    row.IsNull("EndDate") ? null : DateOnly.FromDateTime(Convert.ToDateTime(row["EndDate"]))
+                ));
+            }
+
+            return Ok(list);
+        }
+       
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Education>> GetEducationById(int id)
+        {
+            var parameters = new Dictionary<string, object> { { "@Id", id } };
+            var table = await _db.ExecuteQueryAsync("SELECT * FROM Education WHERE Id = @Id", parameters);
+            if (table.Rows.Count == 0)
             {
                 return NotFound($"Education with ID {id} not found.");
             }
+            var row = table.Rows[0];
+            var education = new Education(
+                Convert.ToInt32(row["Id"]),
+                row["Degree"].ToString(),
+                row["Institution"].ToString(),
+                DateOnly.FromDateTime(Convert.ToDateTime(row["StartDate"])),
+                row.IsNull("EndDate") ? null : DateOnly.FromDateTime(Convert.ToDateTime(row["EndDate"]))
+            );
             return Ok(education);
         }
 
-        [HttpPut("api/educations/add")]
-        public IActionResult AddEducation([FromBody] Education education)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateEducation(int id, [FromBody] Education education)
+        {
+            if (education == null || education.Id != id)
+            {
+                return BadRequest("Education cannot be null and ID must match.");
+            }
+
+            var query = @"
+                UPDATE Education 
+                SET 
+                    Degree = @Degree, 
+                    Institution = @Institution, 
+                    StartDate = @StartDate, 
+                    EndDate = @EndDate 
+                WHERE Id = @Id";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "@Id", education.Id },
+                { "@Degree", education.Degree },
+                { "@Institution", education.Institution },
+                { "@StartDate", education.StartDate },
+                { "@EndDate", education.EndDate ?? (object)DBNull.Value }
+            };
+
+            var success = await _db.ExecuteNonQueryAsync(query, parameters);
+
+            if(!success)
+            {
+                return NotFound($"Education with ID {id} not found.");
+            }
+
+            return Ok(education);
+        }
+
+        [HttpPost()]
+        public async Task<IActionResult> AddEducationAsync([FromBody] Education education)
         {
             if (education == null)
             {
                 return BadRequest("Education cannot be null.");
             }
-            // Here you would typically add the education to a database or a list.
-            // For this example, we will just return the added education.
-            return CreatedAtAction(nameof(GetEducationById), new { id = education.Id }, education);
-        }
-
-        [HttpPost("api/educations/update/{id}")]
-        public IActionResult UpdateEducation(int id, [FromBody] Education education)
-        {
-            if (education == null || education.Id != id)
+            var query = @"
+                INSERT INTO Education (Degree, Institution, Start_Date, End_Date) 
+                VALUES (@Degree, @Institution, @StartDate, @EndDate);
+                ";
+            var parameters = new Dictionary<string, object>
             {
-                return BadRequest("Invalid education data.");
+                { "@Degree", education.Degree },
+                { "@Institution", education.Institution },
+                { "@StartDate", education.StartDate },
+                { "@EndDate", education.EndDate ?? (object)DBNull.Value }
+            };
+
+            var success = await _db.ExecuteNonQueryAsync(query, parameters);
+            if (!success)
+            {
+                return BadRequest("Failed to add education.");
             }
-            // Here you would typically update the education in a database or a list.
-            // For this example, we will just return the updated education.
-            return Ok(education);
+            return Ok("Created Education");
         }
 
-        [HttpDelete("api/educations/delete/{id}")]
-        public IActionResult DeleteEducation(int id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEducation(int id)
         {
-            // Here you would typically delete the education from a database or a list.
-            // For this example, we will just return a success message.
+            var parameters = new Dictionary<string, object> { { "@Id", id } };
+            var query = "DELETE FROM Education WHERE Id = @Id";
+            var success = await _db.ExecuteNonQueryAsync(query, parameters);
+            if (!success)
+            {
+                return NotFound($"Education with ID {id} not found.");
+            }
             return Ok($"Education with ID {id} has been deleted.");
         }
     }

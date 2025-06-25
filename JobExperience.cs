@@ -6,6 +6,6 @@
         public string Title { get; set; } = title;
         public string Company { get; set; } = company;
         public string Description { get; set; } = description;
-        public Nullable<int> recomendation { get; set; }
+        public Nullable<int> Recomendation { get; set; }
     }
 }

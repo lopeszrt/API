@@ -1,14 +1,26 @@
 ﻿namespace API
 {
-    public class Profile(int id, string name, string description, string email, string number, string location, string linkedIn, string github)
+    public class Profile
     {
-        private readonly int _id = id;
-        public string Name { get; set; } = name;
-        public string Description { get; set; } = description;
-        public string Email { get; set; } = email;
-        public string Phone { get; set; } = number;
-        public string Location { get; set; } = location;
-        public string LinkedIn { get; set; } = linkedIn;
-        public string GitHub { get; set; } = github;
+        private readonly int _id;
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Email { get; set; }
+        public string Phone { get; set; }
+        public string Location { get; set; }
+        public string LinkedIn { get; set; }
+        public string GitHub { get; set; }
+
+        public Profile(int id, string name, string description, string email, string phone, string location, string linkedIn, string gitHub)
+        {
+            _id = id;
+            Name = name;
+            Description = description;
+            Email = email;
+            Phone = phone;
+            Location = location;
+            LinkedIn = linkedIn;
+            GitHub = gitHub;
+        }
     }
 }
