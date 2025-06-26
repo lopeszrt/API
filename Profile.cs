@@ -10,8 +10,13 @@
         public string Location { get; set; }
         public string LinkedIn { get; set; }
         public string GitHub { get; set; }
+        public readonly int UserId;
+        public int Id
+        {
+            get { return _id; }
+        }
 
-        public Profile(int id, string name, string description, string email, string phone, string location, string linkedIn, string gitHub)
+        public Profile(int id, string name, string description, string email, string phone, string location, string linkedIn, string gitHub, int userId)
         {
             _id = id;
             Name = name;
@@ -21,6 +26,7 @@
             Location = location;
             LinkedIn = linkedIn;
             GitHub = gitHub;
+            UserId = userId;
         }
     }
 }

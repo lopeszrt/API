@@ -7,16 +7,20 @@
         public string Institution { get; set; }
         public string Description { get; set; }
 
-        public Nullable<DateOnly> EndDate { get; set; }
-        public DateOnly StartDate { get; set; }
+        public string? EndDate { get; set; }
+        public string StartDate { get; set; }
 
-        public Education(int id, string degree, string institution, DateOnly startDate, DateOnly? endDate = null)
+        public readonly int ProfileId;
+
+        public Education(int id, int profileId, string degree, string description,string institution, string startDate, string? endDate = "")
         {
             _id = id;
             Degree = degree;
             Institution = institution;
             StartDate = startDate;
             EndDate = endDate;
+            Description = description;
+            ProfileId = profileId;
         }
 
         public int Id

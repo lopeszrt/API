@@ -7,7 +7,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EducationController : ControllerBase
+    public class EducationController : Controller
     {
         private readonly Database _db;
 
@@ -26,10 +26,12 @@ namespace API.Controllers
             {
                 list.Add(new Education(
                     Convert.ToInt32(row["Id"]),
+                    Convert.ToInt32(row["User_Profile_Id"]),
                     row["Degree"].ToString(),
+                    row["Description"].ToString(),
                     row["Institution"].ToString(),
-                    DateOnly.FromDateTime(Convert.ToDateTime(row["StartDate"])),
-                    row.IsNull("EndDate") ? null : DateOnly.FromDateTime(Convert.ToDateTime(row["EndDate"]))
+                    row["StartDate"].ToString(),
+                    row.IsNull("EndDate") ? "" : row["EndDate"].ToString()
                 ));
             }
 
@@ -49,10 +51,12 @@ namespace API.Controllers
             var row = table.Rows[0];
             var education = new Education(
                 Convert.ToInt32(row["Id"]),
+                Convert.ToInt32(row["User_Profile_Id"]),
                 row["Degree"].ToString(),
+                row["Description"].ToString(),
                 row["Institution"].ToString(),
-                DateOnly.FromDateTime(Convert.ToDateTime(row["StartDate"])),
-                row.IsNull("EndDate") ? null : DateOnly.FromDateTime(Convert.ToDateTime(row["EndDate"]))
+                row["StartDate"].ToString(),
+                row.IsNull("EndDate") ? "" : row["EndDate"].ToString()
             );
             return Ok(education);
         }
@@ -69,7 +73,8 @@ namespace API.Controllers
                 UPDATE Education 
                 SET 
                     Degree = @Degree, 
-                    Institution = @Institution, 
+                    Institution = @Institution,
+                    Description = @Description,
                     StartDate = @StartDate, 
                     EndDate = @EndDate 
                 WHERE Id = @Id";
@@ -79,6 +84,7 @@ namespace API.Controllers
                 { "@Id", education.Id },
                 { "@Degree", education.Degree },
                 { "@Institution", education.Institution },
+                { "@Description", education.Description },
                 { "@StartDate", education.StartDate },
                 { "@EndDate", education.EndDate ?? (object)DBNull.Value }
             };
@@ -101,15 +107,17 @@ namespace API.Controllers
                 return BadRequest("Education cannot be null.");
             }
             var query = @"
-                INSERT INTO Education (Degree, Institution, Start_Date, End_Date) 
-                VALUES (@Degree, @Institution, @StartDate, @EndDate);
+                INSERT INTO Education (Degree, Institution, Description,StartDate, EndDate, User_Profile_Id) 
+                VALUES (@Degree, @Institution, @Description,@StartDate, @EndDate, @ProfileId);
                 ";
             var parameters = new Dictionary<string, object>
             {
                 { "@Degree", education.Degree },
                 { "@Institution", education.Institution },
+                { "@Description", education.Description },
+                { "@ProfileId", education.ProfileId },
                 { "@StartDate", education.StartDate },
-                { "@EndDate", education.EndDate ?? (object)DBNull.Value }
+                { "@EndDate", education.EndDate ?? "" }
             };
 
             var success = await _db.ExecuteNonQueryAsync(query, parameters);

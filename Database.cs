@@ -48,5 +48,20 @@ namespace API
             return dataTable;
         }
 
+        public async Task<object?> ExecuteScalarAsync(string query, Dictionary<string, object> parameters)
+        {
+            await using var connection = new MySqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            await using var command = new MySqlCommand(query, connection);
+            foreach (var param in parameters)
+            {
+                command.Parameters.AddWithValue(param.Key, param.Value);
+            }
+
+            return await command.ExecuteScalarAsync();
+        }
+
+
     }
 }

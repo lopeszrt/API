@@ -6,21 +6,26 @@
         public string Name { get; set; }
 
         public string Description { get; set; }
-        public Skill(int id, string name, string description)
+
+        public readonly int ProfileId;
+
+        public readonly int ProgrammingLanguageId;
+        public Skill(int id, string name, string description, int programmingLanguageId, int profileId)
         {
             _id = id;
             Name = name;
             Description = description;
-        }
-
-        public int GetId()
-        {
-            return _id;
+            ProgrammingLanguageId = programmingLanguageId;
+            ProfileId = profileId;
         }
 
         public void SetDescription(string description)
         {
             Description = description;
+        }
+        public int Id
+        {
+            get { return _id; }
         }
     }
 }
