@@ -1,12 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace API.Controllers
 {
+    [AllowAnonymous]
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : Controller
     {
         private readonly Database _db;
+        private readonly IConfiguration _configuration;
 
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequest user)
@@ -30,7 +37,34 @@ namespace API.Controllers
             {
                 return Unauthorized("Invalid username or password.");
             }
-            return Ok(new { UserId = result });
+
+            var userId = result.ToString();
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var secretKey = jwtSettings["SecretKey"];
+            var issuer = jwtSettings["Issuer"];
+            var audience = jwtSettings["Audience"];
+            var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "60");
+
+            var Claim = new[]
+            {
+                new Claim("id", userId),
+                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: Claim,
+                expires: DateTime.Now.AddMinutes(expiryMinutes),
+                signingCredentials: creds
+            );
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return Ok(new { token = tokenString });
         }
 
         [HttpPost("register")]
@@ -54,9 +88,10 @@ namespace API.Controllers
             return Ok("User registered successfully.");
         }
 
-        public AuthController(Database db)
+        public AuthController(Database db, IConfiguration configuration)
         {
             _db = db;
+            _configuration = configuration;
         }
     }
 }

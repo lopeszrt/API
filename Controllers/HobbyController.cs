@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Data;
 
 namespace API.Controllers
@@ -14,6 +15,7 @@ namespace API.Controllers
             _db = db;
         }
 
+        [AllowAnonymous]
         [HttpGet()]
         public async Task<ActionResult<List<Hobby>>> GetHobbies()
         {

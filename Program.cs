@@ -1,5 +1,6 @@
 using API;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -8,9 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-
-System.Console.WriteLine(jwtSettings);
-System.Console.WriteLine(builder.Configuration.GetSection("JwtSettings__SecretKey"));
 
 if (jwtSettings.Exists())
 {
@@ -48,7 +46,12 @@ if (jwtSettings.Exists())
         };
     });
 
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthorization(options =>
+    {
+        options.FallbackPolicy = new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
+    });
 
     var app = builder.Build();
 
