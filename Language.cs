@@ -7,6 +7,7 @@
         public string Proficiency { get; set; }
 
         public readonly int ProfileId;
+
         public int Id
         {
             get { return _id; }

@@ -7,6 +7,7 @@ namespace API.Controllers
     public class AuthController : Controller
     {
         private readonly Database _db;
+
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequest user)
         {
@@ -30,7 +31,6 @@ namespace API.Controllers
                 return Unauthorized("Invalid username or password.");
             }
             return Ok(new { UserId = result });
-
         }
 
         [HttpPost("register")]

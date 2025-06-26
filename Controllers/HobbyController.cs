@@ -1,7 +1,5 @@
-﻿using System.Data;
-using System.Diagnostics.Eventing.Reader;
-using System.Xml.Serialization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace API.Controllers
 {
@@ -42,7 +40,7 @@ namespace API.Controllers
                 return BadRequest("Education cannot be null.");
             }
             var query = @"
-                INSERT INTO Education (Degree, Institution, Start_Date, End_Date) 
+                INSERT INTO Education (Degree, Institution, Start_Date, End_Date)
                 VALUES (@Degree, @Institution, @StartDate, @EndDate);
                 ";
             var parameters = new Dictionary<string, object>

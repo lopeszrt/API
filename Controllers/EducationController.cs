@@ -1,7 +1,5 @@
-﻿using System.Data;
-using System.Diagnostics.Eventing.Reader;
-using System.Xml.Serialization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace API.Controllers
 {
@@ -37,7 +35,6 @@ namespace API.Controllers
 
             return Ok(list);
         }
-       
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Education>> GetEducationById(int id)
@@ -70,13 +67,13 @@ namespace API.Controllers
             }
 
             var query = @"
-                UPDATE Education 
-                SET 
-                    Degree = @Degree, 
+                UPDATE Education
+                SET
+                    Degree = @Degree,
                     Institution = @Institution,
                     Description = @Description,
-                    StartDate = @StartDate, 
-                    EndDate = @EndDate 
+                    StartDate = @StartDate,
+                    EndDate = @EndDate
                 WHERE Id = @Id";
 
             var parameters = new Dictionary<string, object>
@@ -91,7 +88,7 @@ namespace API.Controllers
 
             var success = await _db.ExecuteNonQueryAsync(query, parameters);
 
-            if(!success)
+            if (!success)
             {
                 return NotFound($"Education with ID {id} not found.");
             }
@@ -107,7 +104,7 @@ namespace API.Controllers
                 return BadRequest("Education cannot be null.");
             }
             var query = @"
-                INSERT INTO Education (Degree, Institution, Description,StartDate, EndDate, User_Profile_Id) 
+                INSERT INTO Education (Degree, Institution, Description,StartDate, EndDate, User_Profile_Id)
                 VALUES (@Degree, @Institution, @Description,@StartDate, @EndDate, @ProfileId);
                 ";
             var parameters = new Dictionary<string, object>

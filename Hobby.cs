@@ -6,6 +6,7 @@
         public string Name { get; set; }
 
         public readonly int ProfileId;
+
         public Hobby(int id, string name, int profileId)
         {
             _id = id;

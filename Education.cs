@@ -12,7 +12,7 @@
 
         public readonly int ProfileId;
 
-        public Education(int id, int profileId, string degree, string description,string institution, string startDate, string? endDate = "")
+        public Education(int id, int profileId, string degree, string description, string institution, string startDate, string? endDate = "")
         {
             _id = id;
             Degree = degree;

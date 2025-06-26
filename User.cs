@@ -1,7 +1,4 @@
-﻿using BCrypt.Net;
-using System.Security.Cryptography.Xml;
-
-namespace API
+﻿namespace API
 {
     public class LoginRequest
     {
@@ -19,6 +16,4 @@ namespace API
             Password = password;
         }
     }
-
-
 }

@@ -10,6 +10,7 @@
         public readonly int ProfileId;
 
         public readonly int ProgrammingLanguageId;
+
         public Skill(int id, string name, string description, int programmingLanguageId, int profileId)
         {
             _id = id;
@@ -23,6 +24,7 @@
         {
             Description = description;
         }
+
         public int Id
         {
             get { return _id; }

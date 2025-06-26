@@ -5,8 +5,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
+System.Console.WriteLine(jwtSettings);
+System.Console.WriteLine(builder.Configuration.GetSection("JwtSettings__SecretKey"));
 
 if (jwtSettings.Exists())
 {
@@ -20,7 +24,6 @@ if (jwtSettings.Exists())
     {
         throw new InvalidOperationException("One or more JwtSettings values are missing.");
     }
-
 
     builder.Services.AddScoped<Database>();
     builder.Services.AddControllers();

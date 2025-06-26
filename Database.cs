@@ -6,6 +6,7 @@ namespace API
     public class Database
     {
         private readonly string _connectionString;
+
         public Database()
         {
             var host = Environment.GetEnvironmentVariable("MARIADB_HOST");
@@ -61,7 +62,5 @@ namespace API
 
             return await command.ExecuteScalarAsync();
         }
-
-
     }
 }
