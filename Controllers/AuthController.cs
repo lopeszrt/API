@@ -58,7 +58,7 @@ namespace API.Controllers
             var userId = User.FindFirst("id")?.Value;
             var username = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
-            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(expiry))
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
             {
                 return Unauthorized("Invalid token.");
             }
