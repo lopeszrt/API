@@ -1,4 +1,4 @@
-using API;
+using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -24,6 +24,7 @@ if (jwtSettings.Exists())
     }
 
     builder.Services.AddScoped<Database>();
+    builder.Services.AddScoped<JwtService>();
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();

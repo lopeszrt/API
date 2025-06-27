@@ -1,7 +1,7 @@
 ﻿using MySqlConnector;
 using System.Data;
 
-namespace API
+namespace API.Services
 {
     public class Database
     {
@@ -30,6 +30,22 @@ namespace API
             }
 
             return await command.ExecuteNonQueryAsync() > 0;
+        }
+
+        public async Task<long> ExecuteInsertAsync(string query, Dictionary<string, object> parameters)
+        {
+            await using var connection = new MySqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            await using var command = new MySqlCommand(query, connection);
+
+            foreach (var param in parameters)
+            {
+                command.Parameters.AddWithValue(param.Key, param.Value);
+            }
+
+            await command.ExecuteNonQueryAsync();
+            return command.LastInsertedId;
         }
 
         public async Task<DataTable> ExecuteQueryAsync(string query, Dictionary<string, object> parameters)

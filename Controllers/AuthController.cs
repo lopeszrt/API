@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 namespace API.Controllers
@@ -13,7 +14,7 @@ namespace API.Controllers
     public class AuthController : Controller
     {
         private readonly Database _db;
-        private readonly IConfiguration _configuration;
+        private readonly JwtService _jwtService;
 
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequest user)
@@ -23,48 +24,49 @@ namespace API.Controllers
                 return BadRequest("Username and password are required.");
             }
 
-            var query = "SELECT id FROM User WHERE Username = @Username AND Password = @Password";
+            var query = "SELECT id, Password FROM User WHERE Username = @Username";
 
             var parameters = new Dictionary<string, object>
             {
-                { "@Username", user.Username },
-                { "@Password", user.Password }
+                { "@Username", user.Username }
             };
 
-            var result = await _db.ExecuteScalarAsync(query, parameters);
+            var result = await _db.ExecuteQueryAsync(query, parameters);
 
-            if (result == null)
+            if (result == null || result.Rows.Count == 0)
             {
                 return Unauthorized("Invalid username or password.");
             }
 
-            var userId = result.ToString();
-            var jwtSettings = _configuration.GetSection("JwtSettings");
-            var secretKey = jwtSettings["SecretKey"];
-            var issuer = jwtSettings["Issuer"];
-            var audience = jwtSettings["Audience"];
-            var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "60");
+            var userId = result.Rows[0]["id"].ToString();
+            var hashedPassword = result.Rows[0]["Password"].ToString() ?? "";
 
-            var Claim = new[]
+            if (!user.checkHashed(hashedPassword))
             {
-                new Claim("id", userId),
-                new Claim(JwtRegisteredClaimNames.Sub, userId),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+                return Unauthorized("Invalid username or password.");
+            }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
-                claims: Claim,
-                expires: DateTime.Now.AddMinutes(expiryMinutes),
-                signingCredentials: creds
-            );
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            var tokenString = _jwtService.GenerateToken(userId, user.Username);
 
             return Ok(new { token = tokenString });
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> TokenLogin()
+        {
+            var userId = User.FindFirst("id")?.Value;
+            var username = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(expiry))
+            {
+                return Unauthorized("Invalid token.");
+            }
+
+            return Ok(new
+            {
+                userId
+            });
         }
 
         [HttpPost("register")]
@@ -74,24 +76,46 @@ namespace API.Controllers
             {
                 return BadRequest("Username and password are required.");
             }
+
+            var checkQuery = "SELECT COUNT(*) FROM User WHERE Username = @Username";
+            var checkParameters = new Dictionary<string, object>
+            {
+                { "@Username", user.Username }
+            };
+
+
+            var count = await _db.ExecuteScalarAsync(checkQuery, checkParameters);
+
+            if (Convert.ToInt32(count) > 0)
+            {
+                return BadRequest("Username already exists.");
+            }
+
             var query = "INSERT INTO User (Username, Password) VALUES (@Username, @Password)";
             var parameters = new Dictionary<string, object>
             {
                 { "@Username", user.Username },
-                { "@Password", user.Password }
+                { "@Password", LoginRequest.hashPassword(user.Password) }
             };
-            var success = await _db.ExecuteNonQueryAsync(query, parameters);
-            if (!success)
+            var success = await _db.ExecuteInsertAsync(query, parameters);
+            if (success == 0)
             {
                 return BadRequest("Failed to register user.");
             }
-            return Ok("User registered successfully.");
+
+            string token = _jwtService.GenerateToken(success.ToString(), user.Username);
+
+            return Ok(new
+            {
+                message = "User registered successfully.",
+                token = token
+            });
         }
 
-        public AuthController(Database db, IConfiguration configuration)
+        public AuthController(Database db, JwtService jwtService)
         {
             _db = db;
-            _configuration = configuration;
+            _jwtService = jwtService;
         }
     }
 }

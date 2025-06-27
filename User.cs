@@ -5,6 +5,11 @@
         public string Username { get; set; }
         public string Password { get; set; }
 
+        public bool checkHashed(string password)
+        {
+            return BCrypt.Net.BCrypt.Verify(this.Password,password);
+        }
+
         public static string hashPassword(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
