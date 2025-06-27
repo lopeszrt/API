@@ -1,16 +1,15 @@
 ﻿using API.Services;
+using API.Tables;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace API.Controllers
 {
     [AllowAnonymous]
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json")]
     public class AuthController : Controller
     {
         private readonly Database _db;
@@ -21,7 +20,10 @@ namespace API.Controllers
         {
             if (string.IsNullOrEmpty(user.Username) || string.IsNullOrEmpty(user.Password))
             {
-                return BadRequest("Username and password are required.");
+                return BadRequest(new
+                {
+                    error = "Password and Username are required"
+                });
             }
 
             var query = "SELECT id, Password FROM User WHERE Username = @Username";
@@ -35,7 +37,10 @@ namespace API.Controllers
 
             if (result == null || result.Rows.Count == 0)
             {
-                return Unauthorized("Invalid username or password.");
+                return Unauthorized(new
+                {
+                    error = "Invalid username or password."
+                });
             }
 
             var userId = result.Rows[0]["id"].ToString();
@@ -43,30 +48,30 @@ namespace API.Controllers
 
             if (!user.checkHashed(hashedPassword))
             {
-                return Unauthorized("Invalid username or password.");
+                return Unauthorized(new
+                {
+                    error = "Invalid username or password."
+                });
             }
 
             var tokenString = _jwtService.GenerateToken(userId, user.Username);
 
-            return Ok(new { token = tokenString });
+            return Ok(new { token = tokenString, userId });
         }
 
         [Authorize]
         [HttpGet]
-        public IActionResult TokenLogin()
+        public async Task<IActionResult> TokenLogin()
         {
-            var userId = User.FindFirst("id")?.Value;
+            var userId = User.FindFirst(CustomClaimTypes.UserId)?.Value;
             var username = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
             if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
             {
-                return Unauthorized("Invalid token.");
+                return Unauthorized(new { error = "Invalid token." });
             }
 
-            return Ok(new
-            {
-                userId
-            });
+            return Ok(new { userId });
         }
 
         [HttpPost("register")]
@@ -74,7 +79,10 @@ namespace API.Controllers
         {
             if (string.IsNullOrEmpty(user.Username) || string.IsNullOrEmpty(user.Password))
             {
-                return BadRequest("Username and password are required.");
+                return BadRequest(new
+                {
+                    error = "Password and Username are required"
+                });
             }
 
             var checkQuery = "SELECT COUNT(*) FROM User WHERE Username = @Username";
@@ -83,12 +91,14 @@ namespace API.Controllers
                 { "@Username", user.Username }
             };
 
-
             var count = await _db.ExecuteScalarAsync(checkQuery, checkParameters);
 
             if (Convert.ToInt32(count) > 0)
             {
-                return BadRequest("Username already exists.");
+                return BadRequest(new
+                {
+                    error = "Username already Exists"
+                });
             }
 
             var query = "INSERT INTO User (Username, Password) VALUES (@Username, @Password)";
@@ -100,7 +110,9 @@ namespace API.Controllers
             var success = await _db.ExecuteInsertAsync(query, parameters);
             if (success == 0)
             {
-                return BadRequest("Failed to register user.");
+                return BadRequest(new { 
+                    error= "Failed to register user."
+                });
             }
 
             string token = _jwtService.GenerateToken(success.ToString(), user.Username);

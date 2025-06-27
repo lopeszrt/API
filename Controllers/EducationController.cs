@@ -1,4 +1,5 @@
 ﻿using API.Services;
+using API.Tables;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
@@ -110,6 +111,7 @@ namespace API.Controllers
                 INSERT INTO Education (Degree, Institution, Description,StartDate, EndDate, User_Profile_Id)
                 VALUES (@Degree, @Institution, @Description,@StartDate, @EndDate, @ProfileId);
                 ";
+
             var parameters = new Dictionary<string, object>
             {
                 { "@Degree", education.Degree },

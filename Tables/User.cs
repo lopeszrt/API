@@ -1,4 +1,4 @@
-﻿namespace API
+﻿namespace API.Tables
 {
     public class LoginRequest
     {
@@ -7,7 +7,7 @@
 
         public bool checkHashed(string password)
         {
-            return BCrypt.Net.BCrypt.Verify(this.Password,password);
+            return BCrypt.Net.BCrypt.Verify(Password,password);
         }
 
         public static string hashPassword(string password)

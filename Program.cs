@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
@@ -24,6 +26,7 @@ if (jwtSettings.Exists())
     }
 
     builder.Services.AddScoped<Database>();
+    builder.Services.AddScoped<DatabaseCalls>();
     builder.Services.AddScoped<JwtService>();
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();

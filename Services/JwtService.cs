@@ -25,7 +25,7 @@ namespace API.Services
 
             var claims = new[]
             {
-                new Claim("id", userId),
+                new Claim(CustomClaimTypes.UserId, userId),
                 new Claim(JwtRegisteredClaimNames.Sub, username),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
@@ -43,5 +43,10 @@ namespace API.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+    }
+
+    public static class CustomClaimTypes
+    {
+        public const string UserId = "id";
     }
 }

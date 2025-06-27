@@ -1,4 +1,4 @@
-﻿namespace API
+﻿namespace API.Tables
 {
     public class ProgrammingLanguage
     {
@@ -8,7 +8,7 @@
 
         public readonly int ProfileId;
 
-        public List<Skill> skills { get; set; } = new List<Skill>();
+        public List<Skill> Skills { get; set; } = [];
 
         public int Id
         {
@@ -25,9 +25,10 @@
 
         public void AddSkill(Skill skill)
         {
+            Skills ??= [];
             if (skill != null && skill.ProgrammingLanguageId == _id)
             {
-                skills.Add(skill);
+                Skills.Add(skill);
             }
         }
     }

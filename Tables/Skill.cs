@@ -1,4 +1,4 @@
-﻿namespace API
+﻿namespace API.Tables
 {
     public class Skill
     {
@@ -10,6 +10,8 @@
         public readonly int ProfileId;
 
         public readonly int ProgrammingLanguageId;
+
+        public readonly int projectId;
 
         public Skill(int id, string name, string description, int programmingLanguageId, int profileId)
         {
