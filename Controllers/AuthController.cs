@@ -53,7 +53,7 @@ namespace API.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> TokenLogin()
+        public IActionResult TokenLogin()
         {
             var userId = User.FindFirst("id")?.Value;
             var username = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
