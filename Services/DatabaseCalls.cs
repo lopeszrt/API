@@ -10,7 +10,7 @@ namespace API.Services
 
         public DatabaseCalls(Database database, IConfiguration config)
         {
-            _db = database ?? throw new ArgumentNullException(nameof(database));
+            _db = database;
 
             var allowedTablesRaw = config["AllowedTables"];
             if (string.IsNullOrWhiteSpace(allowedTablesRaw))
