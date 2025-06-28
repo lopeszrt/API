@@ -5,31 +5,23 @@
         private readonly int _id;
         public string Name { get; set; }
         public int Proficiency { get; set; }
-
         public readonly int ProfileId;
-
-        public List<Skill> Skills { get; set; } = [];
+        public int? SkillId { get; set; }
+        public int? ProjectId { get; set; }
 
         public int Id
         {
             get { return _id; }
         }
 
-        public ProgrammingLanguage(int id, string name, int proficiency, int profileId)
+        public ProgrammingLanguage(int id, string name, int proficiency, int profileId, int? skillId= null, int? projectId = null)
         {
             _id = id;
             Name = name;
             Proficiency = proficiency;
             ProfileId = profileId;
-        }
-
-        public void AddSkill(Skill skill)
-        {
-            Skills ??= [];
-            if (skill != null && skill.ProgrammingLanguageId == _id)
-            {
-                Skills.Add(skill);
-            }
+            SkillId = skillId;
+            ProjectId = projectId;
         }
     }
 }

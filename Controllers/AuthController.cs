@@ -12,8 +12,9 @@ namespace API.Controllers
     [Produces("application/json")]
     public class AuthController : Controller
     {
-        private readonly Database _db;
+        private readonly DatabaseCalls _db;
         private readonly JwtService _jwtService;
+        private const string UserTable = "User";
 
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequest user)
@@ -26,14 +27,12 @@ namespace API.Controllers
                 });
             }
 
-            var query = "SELECT id, Password FROM User WHERE Username = @Username";
-
-            var parameters = new Dictionary<string, object>
+            var data = new Dictionary<string, object>
             {
-                { "@Username", user.Username }
+                { "Username", user.Username }
             };
 
-            var result = await _db.ExecuteQueryAsync(query, parameters);
+            var result = await _db.GetFromTableFilteredAsync(UserTable, data);
 
             if (result == null || result.Rows.Count == 0)
             {
@@ -85,15 +84,14 @@ namespace API.Controllers
                 });
             }
 
-            var checkQuery = "SELECT COUNT(*) FROM User WHERE Username = @Username";
-            var checkParameters = new Dictionary<string, object>
+            var data = new Dictionary<string, object>
             {
-                { "@Username", user.Username }
+                { "Username", user.Username }
             };
 
-            var count = await _db.ExecuteScalarAsync(checkQuery, checkParameters);
+            var res = await _db.GetFromTableFilteredAsync(UserTable, data);
 
-            if (Convert.ToInt32(count) > 0)
+            if (res.Rows.Count > 0)
             {
                 return BadRequest(new
                 {
@@ -101,17 +99,16 @@ namespace API.Controllers
                 });
             }
 
-            var query = "INSERT INTO User (Username, Password) VALUES (@Username, @Password)";
-            var parameters = new Dictionary<string, object>
+            data = new Dictionary<string, object>
             {
                 { "@Username", user.Username },
                 { "@Password", LoginRequest.hashPassword(user.Password) }
             };
-            var success = await _db.ExecuteInsertAsync(query, parameters);
-            if (success == 0)
+            var success = await _db.InsertAsync(UserTable, data);
+            if (success == -1)
             {
                 return BadRequest(new { 
-                    error= "Failed to register user."
+                    error = "Failed to register user."
                 });
             }
 
@@ -124,7 +121,7 @@ namespace API.Controllers
             });
         }
 
-        public AuthController(Database db, JwtService jwtService)
+        public AuthController(DatabaseCalls db, JwtService jwtService)
         {
             _db = db;
             _jwtService = jwtService;

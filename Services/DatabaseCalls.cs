@@ -67,14 +67,14 @@ namespace API.Services
             var parameters = new Dictionary<string, object>();
             var whereClauses = new List<string>();
 
-            foreach (var kvp in filters)
+            foreach (var hash in filters)
             {
-                if (!allowedColumns.Contains(kvp.Key))
-                    throw new ArgumentException($"Invalid filter column: {kvp.Key}");
+                if (!allowedColumns.Contains(hash.Key))
+                    throw new ArgumentException($"Invalid filter column: {hash.Key}");
 
-                string paramName = $"@{kvp.Key}";
-                whereClauses.Add($"{kvp.Key} = {paramName}");
-                parameters[paramName] = kvp.Value;
+                string paramName = $"@{hash.Key}";
+                whereClauses.Add($"{hash.Key} = {paramName}");
+                parameters[paramName] = hash.Value;
             }
 
             var whereSql = whereClauses.Count > 0 ? " WHERE " + string.Join(" AND ", whereClauses) : "";
@@ -93,8 +93,8 @@ namespace API.Services
                 throw new ArgumentException("No data to insert.");
 
             var normalizedData = data.ToDictionary(
-                kvp => kvp.Key.StartsWith("@") ? kvp.Key : "@" + kvp.Key,
-                kvp => kvp.Value
+                hash => hash.Key.StartsWith("@") ? hash.Key : "@" + hash.Key,
+                hash => hash.Value
             );
 
 

@@ -11,6 +11,7 @@ namespace API.Controllers
     {
         public async Task<IActionResult> Get()
         {
+
             return Ok("Pong");
         }
     }

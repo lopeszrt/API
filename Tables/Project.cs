@@ -7,7 +7,7 @@
         public string Description { get; set; }
         public string? Link { get; set; }
         public readonly int ProfileId;
-        public List<Skill> Skills = [];
+        public List<ProgrammingLanguage> ProgrammingLanguages = [];
 
         public Project(int id, string name, string description, string link, int profileId)
         {
@@ -22,12 +22,12 @@
             get { return _id; }
         }
 
-        public void AddSkill(Skill skill)
+        public void AddSkill(ProgrammingLanguage programmingLanguage)
         {
-            Skills ??= [];
-            if (skill != null && skill.projectId == _id)
+            ProgrammingLanguages ??= [];
+            if (programmingLanguage != null && programmingLanguage.ProjectId == _id)
             {
-                Skills.Add(skill);
+                ProgrammingLanguages.Add(programmingLanguage);
             }
         }
     }

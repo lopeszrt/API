@@ -44,7 +44,10 @@ namespace API.Services
                 command.Parameters.AddWithValue(param.Key, param.Value);
             }
 
-            await command.ExecuteNonQueryAsync();
+            var effectedRows = await command.ExecuteNonQueryAsync();
+            if (effectedRows == 0) {
+                return -1; // No rows inserted
+            }
             return command.LastInsertedId;
         }
 
