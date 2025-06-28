@@ -22,6 +22,7 @@ namespace API.Controllers
         [HttpGet()]
         public async Task<IActionResult> GetEducations()
         {
+            Console.WriteLine("Fetching all educations from the database...");
             var table = await _db.GetFromTableAsync(EducationTable);
 
             var list = new List<Education>();
