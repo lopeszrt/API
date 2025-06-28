@@ -12,7 +12,7 @@ namespace API.Services
         {
             _db = database;
 
-            var allowedTablesRaw = config["AllowedTables"];
+            var allowedTablesRaw = config["ALLOWED_TABLES"];
             if (string.IsNullOrWhiteSpace(allowedTablesRaw))
                 throw new InvalidOperationException("Environment variable 'AllowedTables' is not set or is empty.");
 
