@@ -361,3 +361,22 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+
+# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/modules.xml
+/.idea.API.iml
+/contentModel.xml
+/projectSettingsUpdater.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+/.idea/.idea.API/.idea/.gitignore
+/.idea/.idea.API/.idea/encodings.xml
+/.idea/.idea.API/.idea/indexLayout.xml
+/.idea/.idea.API/.idea/vcs.xml

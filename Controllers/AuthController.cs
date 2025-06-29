@@ -60,7 +60,7 @@ namespace API.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> TokenLogin()
+        public IActionResult TokenLogin()
         {
             var userId = User.FindFirst(CustomClaimTypes.UserId)?.Value;
             var username = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
@@ -107,7 +107,8 @@ namespace API.Controllers
             var success = await _db.InsertAsync(UserTable, data);
             if (success == -1)
             {
-                return BadRequest(new { 
+                return BadRequest(new
+                {
                     error = "Failed to register user."
                 });
             }

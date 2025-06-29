@@ -1,34 +1,47 @@
-﻿namespace API.Tables
+﻿using System.Data;
+
+namespace API.Tables
 {
     public class Project
     {
-        private readonly int _id;
+        public int Id;
         public string Name { get; set; }
         public string Description { get; set; }
         public string? Link { get; set; }
-        public readonly int ProfileId;
+        public readonly int UserProfileId;
         public List<ProgrammingLanguage> ProgrammingLanguages = [];
+        public string? ImageUrl { get; set; }
 
-        public Project(int id, string name, string description, string link, int profileId)
+        public Project(int id, string name, string description, string link, int userProfileId, string? imageUrl = "", string? projectUrl = null)
         {
-            _id = id;
+            Id = id;
             Name = name;
             Description = description;
             Link = link;
-            ProfileId = profileId;
-        }
-        public int Id
-        {
-            get { return _id; }
+            UserProfileId = userProfileId;
+            ImageUrl = imageUrl;
         }
 
-        public void AddSkill(ProgrammingLanguage programmingLanguage)
+        public void AddProgrammingLanguage(ProgrammingLanguage programmingLanguage)
         {
             ProgrammingLanguages ??= [];
-            if (programmingLanguage != null && programmingLanguage.ProjectId == _id)
+            if (programmingLanguage.ProjectId == Id)
             {
                 ProgrammingLanguages.Add(programmingLanguage);
             }
+        }
+
+        public static Project CreateFromDataRow(DataRow row)
+        {
+            return new Project(
+                Convert.ToInt32(row["id"]),
+                row["Name"].ToString(),
+                row["Description"].ToString(),
+                row.IsNull("Link") ? "" : row["Link"].ToString(),
+                Convert.ToInt32(row["UserProfileId"]),
+                row.IsNull("ImageUrl") ? "" : row["ImageUrl"].ToString(),
+                row.IsNull("ProjectUrl") ? null : row["ProjectUrl"].ToString()
+            );
         }
     }
 }

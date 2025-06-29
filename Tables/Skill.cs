@@ -1,43 +1,42 @@
-﻿namespace API.Tables
+﻿using System.Data;
+
+namespace API.Tables
 {
     public class Skill
     {
-        private readonly int _id;
+        public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
 
-        public readonly int ProfileId;
-
-        public readonly int? ProjectId;
+        public readonly int UserProfileId;
 
         public List<ProgrammingLanguage> ProgrammingLanguages = [];
 
-        public Skill(int id, string name, string description, int profileId, int? projectId = null)
+        public Skill(int id, string name, string description, int userProfileId)
         {
-            _id = id;
+            Id = id;
             Name = name;
             Description = description;
-            ProfileId = profileId;
-            ProjectId = projectId;
-        }
-
-        public void SetDescription(string description)
-        {
-            Description = description;
+            UserProfileId = userProfileId;
         }
 
         public void AddProgrammingLanguage(ProgrammingLanguage programmingLanguage)
         {
             ProgrammingLanguages ??= [];
-            if (programmingLanguage != null && programmingLanguage.SkillId == _id)
+            if (programmingLanguage.SkillId == Id)
             {
                 ProgrammingLanguages.Add(programmingLanguage);
             }
         }
 
-        public int Id
+        public static Skill CreateFromDataRow(DataRow row)
         {
-            get { return _id; }
+            return new Skill(
+                Convert.ToInt32(row["id"]),
+                row["Name"].ToString(),
+                row["Description"].ToString(),
+                Convert.ToInt32(row["UserProfileId"])
+            );
         }
     }
 }

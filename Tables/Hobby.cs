@@ -1,22 +1,28 @@
-﻿namespace API.Tables
+﻿using System.Data;
+
+namespace API.Tables
 {
     public class Hobby
     {
-        private readonly int _id;
+        public int Id { get; set; }
         public string Name { get; set; }
 
-        public readonly int ProfileId;
+        public readonly int UserProfileId;
 
-        public Hobby(int id, string name, int profileId)
+        public Hobby(int id, string name, int userProfileId)
         {
-            _id = id;
+            Id = id;
             Name = name;
-            ProfileId = profileId;
+            UserProfileId = userProfileId;
         }
 
-        public int Id
+        public static Hobby CreateFromDataRow(DataRow row)
         {
-            get { return _id; }
+            return new Hobby(
+                Convert.ToInt32(row["id"]),
+                row["Name"].ToString(),
+                Convert.ToInt32(row["UserProfileId"])
+            );
         }
     }
 }

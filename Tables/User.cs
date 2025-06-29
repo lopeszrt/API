@@ -1,4 +1,6 @@
-﻿namespace API.Tables
+﻿using System.Data;
+
+namespace API.Tables
 {
     public class LoginRequest
     {
@@ -19,6 +21,29 @@
         {
             Username = username;
             Password = password;
+        }
+    }
+
+    public class User
+    {
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+
+        User(int id, string username, string password)
+        {
+            Id = id;
+            Username = username;
+            Password = password;
+        }
+
+        public static User CreateFromDataRow(DataRow row)
+        {
+            return new User(
+                Convert.ToInt32(row["id"]),
+                row["Username"].ToString(),
+                row["Password"].ToString()
+            );
         }
     }
 }

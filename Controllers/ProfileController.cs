@@ -1,0 +1,184 @@
+﻿using API.Services;
+using API.Structure;
+using API.Tables;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Data;
+
+namespace API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Produces("application/json")]
+    public class ProfileController : Controller, IController<User_Profile>
+    {
+        private readonly DatabaseCalls _db;
+        private const string ProfileTable = "User_Profile";
+
+        public ProfileController(DatabaseCalls db)
+        {
+            _db = db;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Add([FromBody] User_Profile item)
+        {
+            var data = new Dictionary<string, object>
+            {
+                { "@Name", item.Name },
+                { "@Description", item.Description },
+                { "@Email", item.Email },
+                { "@Phone", item.Phone },
+                { "@Location", item.Location },
+                { "@LinkedIn", item.LinkedIn },
+                { "@GitHub", item.GitHub },
+                { "@Route", item.Route },
+                { "@Image", item.ImageUrl },
+                { "@PublicPhone", item.PublicPhone},
+                { "@PublicEmail", item.PublicEmail},
+                { "@UserId", item.UserId }
+            };
+            var success = await _db.InsertAsync(ProfileTable, data);
+            if (success == -1)
+            {
+                return BadRequest(new { error = "Failed to add profile." });
+            }
+            item.Id = Convert.ToInt32(success);
+            return Ok(new { message = "Created Profile", data = item });
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var success = await _db.DeleteAsync(ProfileTable, id.ToString());
+            if (!success)
+            {
+                return NotFound(new { error = $"Profile with ID {id} not found." });
+            }
+            return Ok(new { message = $"Profile with ID {id} was deleted." });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Get()
+        {
+            var table = await _db.GetFromTableAsync(ProfileTable);
+            return Ok(new { data = (from DataRow row in table.Rows select User_Profile.CreateFromDataRow(row)).ToList() });
+        }
+
+        [HttpGet("user/{foreignId}")]
+        public async Task<IActionResult> GetByForeignId(int foreignId)
+        {
+            var data = new Dictionary<string, object>
+            {
+                { "UserId", foreignId }
+            };
+            var res = await _db.GetFromTableFilteredAsync(ProfileTable, data);
+            if (res.Rows.Count == 0)
+            {
+                return NotFound(new { error = $"Profile with ForeignId {foreignId} not found." });
+            }
+            return Ok(new { data = User_Profile.CreateFromDataRow(res.Rows[0]) });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("portfolio/{route}")]
+        public async Task<IActionResult> GetPortfolio(string route)
+        {
+            var data = new Dictionary<string, object>
+            {
+                { "Route", route }
+            };
+
+            var res = await _db.GetFromTableFilteredAsync("User_Profile", data);
+            if (res.Rows.Count == 0)
+            {
+                return NotFound(new { error = "User_Profile not found." });
+            }
+
+            var profileId = Convert.ToInt32(res.Rows[0]["Id"]);
+
+            var fdata = new Dictionary<string, object> { { "UserProfileId", profileId } };
+
+            var profileRes = await _db.GetFromTableAsync(ProfileTable, profileId.ToString());
+            var educationsRes = await _db.GetFromTableFilteredAsync("Education", fdata);
+            var hobbiesRes = await _db.GetFromTableFilteredAsync("Hobby", fdata);
+            var skillsRes = await _db.GetFromTableFilteredAsync("Skill", fdata);
+            var jobExperienceRes = await _db.GetFromTableFilteredAsync("JobExperience", fdata);
+            var languagesRes = await _db.GetFromTableFilteredAsync("Language", fdata);
+            var projectsRes = await _db.GetFromTableFilteredAsync("Project", fdata);
+            var programmingLanguagesRes = await _db.GetFromTableFilteredAsync("ProgrammingLanguage", fdata);
+
+            var profile = User_Profile.CreateFromDataRow(profileRes.Rows[0]);
+            var skills = new List<Skill>();
+            var projects = new List<Project>();
+            var hobbies = (from DataRow row in hobbiesRes.Rows select Hobby.CreateFromDataRow(row)).ToList();
+            var educations = (from DataRow ed in educationsRes.Rows select Education.CreateFromDataRow(ed)).ToList();
+            var programmingLanguages = (from DataRow pgl in programmingLanguagesRes.Rows select ProgrammingLanguage.CreateFromDataRow(pgl)).ToList();
+            var jobExperiences = (from DataRow job in jobExperienceRes.Rows select JobExperience.CreateFromDataRow(job)).ToList();
+            var languages = (from DataRow lang in languagesRes.Rows select Language.CreateFromDataRow(lang)).ToList();
+
+            foreach (DataRow sk in skillsRes.Rows)
+            {
+                var skill = Skill.CreateFromDataRow(sk);
+                foreach (var pgl in programmingLanguages)
+                {
+                    skill.AddProgrammingLanguage(pgl);
+                }
+                skills.Add(skill);
+            }
+
+            foreach (DataRow proj in projectsRes.Rows)
+            {
+                var project = Project.CreateFromDataRow(proj);
+                foreach (var pgl in programmingLanguages)
+                {
+                    project.AddProgrammingLanguage(pgl);
+                }
+                projects.Add(project);
+            }
+            return Ok(new
+            {
+                data = new Portfolio(profile, educations, jobExperiences, hobbies, skills, languages, projects)
+            });
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var res = await _db.GetFromTableAsync(ProfileTable, id.ToString());
+            if (res.Rows.Count == 0)
+            {
+                return NotFound(new { error = $"User_Profile with ID {id} not found." });
+            }
+
+            return Ok(new { data = User_Profile.CreateFromDataRow(res.Rows[0]) });
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] User_Profile item)
+        {
+            var data = new Dictionary<string, object>
+            {
+                { "@Name", item.Name },
+                { "@Description", item.Description },
+                { "@Email", item.Email },
+                { "@Phone", item.Phone },
+                { "@Location", item.Location },
+                { "@LinkedIn", item.LinkedIn },
+                { "@GitHub", item.GitHub },
+                { "@Route", item.Route },
+                { "@Image", item.ImageUrl },
+                { "@PublicPhone", item.PublicPhone },
+                { "@PublicEmail", item.PublicEmail }
+            };
+
+            var res = await _db.UpdateAsync(ProfileTable, item.Id.ToString(), data);
+            if (!res)
+            {
+                return BadRequest(new { error = "Failed to update profile." });
+            }
+
+            return Ok(new { message = $"User_Profile with ID {item.Id} was updated", data = item });
+        }
+    }
+}

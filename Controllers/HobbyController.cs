@@ -1,4 +1,5 @@
 ﻿using API.Services;
+using API.Structure;
 using API.Tables;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,72 +9,101 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class HobbyController : Controller
+    [Produces("application/json")]
+    public class HobbyController : Controller, IController<Hobby>
     {
-        private readonly Database _db;
+        private readonly DatabaseCalls _db;
+        private const string HobbyTable = "Hobby";
 
-        public HobbyController(Database db)
+        public HobbyController(DatabaseCalls db)
         {
             _db = db;
         }
 
-        [AllowAnonymous]
-        [HttpGet()]
-        public async Task<ActionResult<List<Hobby>>> GetHobbies()
+        [HttpPost]
+        public async Task<IActionResult> Add([FromBody] Hobby item)
         {
-            var table = await _db.ExecuteQueryAsync("SELECT * FROM Hobby", new());
-
-            var list = new List<Hobby>();
-            foreach (DataRow row in table.Rows)
+            var data = new Dictionary<string, object>
             {
-                list.Add(new Hobby(
-                    Convert.ToInt32(row["Id"]),
-                    row["Name"].ToString(),
-                    Convert.ToInt32(row["User_Profile_Id"])
-                ));
-            }
-
-            return Ok(list);
-        }
-
-        [HttpPost()]
-        public async Task<IActionResult> AddEducationAsync([FromBody] Education education)
-        {
-            if (education == null)
-            {
-                return BadRequest("Education cannot be null.");
-            }
-            var query = @"
-                INSERT INTO Education (Degree, Institution, Start_Date, End_Date)
-                VALUES (@Degree, @Institution, @StartDate, @EndDate);
-                ";
-            var parameters = new Dictionary<string, object>
-            {
-                { "@Degree", education.Degree },
-                { "@Institution", education.Institution },
-                { "@StartDate", education.StartDate },
-                { "@EndDate", education.EndDate ?? (object)DBNull.Value }
+                { "@Name", item.Name },
+                { "@UserProfileId", item.UserProfileId }
             };
-
-            var success = await _db.ExecuteNonQueryAsync(query, parameters);
-            if (!success)
+            var success = await _db.InsertAsync(HobbyTable, data);
+            if (success == -1)
             {
-                return BadRequest("Failed to add education.");
+                return BadRequest(new { error = "Failed to add hobby." });
             }
-            return Ok("Created Education");
+            item.Id = Convert.ToInt32(success);
+            return Ok(new { message = "Created Hobby", data = item });
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEducation(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var parameters = new Dictionary<string, object> { { "@Id", id } };
-            var query = "DELETE FROM Education WHERE Id = @Id";
-            var success = await _db.ExecuteNonQueryAsync(query, parameters);
+            var success = await _db.DeleteAsync(HobbyTable, id.ToString());
             if (!success)
             {
-                return NotFound($"Education with ID {id} not found.");
+                return NotFound(new { error = $"Hobby with ID {id} not found." });
             }
-            return Ok($"Education with ID {id} has been deleted.");
+            return Ok(new { message = $"Hobby with ID {id} was deleted." });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Get()
+        {
+            var res = await _db.GetFromTableAsync(HobbyTable);
+
+            return Ok(new { data = (from DataRow row in res.Rows select Hobby.CreateFromDataRow(row)).ToList() });
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { error = "Invalid ID." });
+            }
+            var res = await _db.GetFromTableAsync(HobbyTable, id.ToString());
+            if (res.Rows.Count == 0)
+            {
+                return NotFound(new { error = $"Hobby with ID {id} not found." });
+            }
+            return Ok(new { data = Hobby.CreateFromDataRow(res.Rows[0]) });
+        }
+
+        [HttpGet("profile/{foreignId}")]
+        public async Task<IActionResult> GetByForeignId(int profileId)
+        {
+            if (profileId <= 0)
+            {
+                return BadRequest(new { error = "Invalid User_Profile ID." });
+            }
+            var data = new Dictionary<string, object>
+            {
+                { "UserProfileId", profileId }
+            };
+            var res = await _db.GetFromTableFilteredAsync(HobbyTable, data);
+            if (res.Rows.Count == 0)
+            {
+                return NotFound(new { error = $"No hobbies found for User_Profile ID {profileId}." });
+            }
+            return Ok(new { data = (from DataRow row in res.Rows select Hobby.CreateFromDataRow(row)).ToList() });
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] Hobby item)
+        {
+            var data = new Dictionary<string, object>
+            {
+                { "@Name", item.Name },
+            };
+
+            var success = await _db.UpdateAsync(HobbyTable, item.Id.ToString(), data);
+            if (!success)
+            {
+                return NotFound(new { error = $"Hobby with ID {item.Id} not found." });
+            }
+            return Ok(new { message = $"Hobby with ID {item.Id} was updated", data = item });
         }
     }
 }

@@ -37,7 +37,7 @@ namespace API.Services
             _ForeignKeys = foreignKeys;
         }
 
-        public async Task<DataTable> GetFromTableAsync(string tableName, string? id = null)
+        public async Task<DataTable> GetFromTableAsync(string tableName, string? id = "")
         {
             if (string.IsNullOrEmpty(tableName) || !_allowedTables.Contains(tableName))
             {
