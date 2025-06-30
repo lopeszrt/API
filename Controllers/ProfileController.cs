@@ -11,7 +11,7 @@ namespace API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class ProfileController : Controller, IController<User_ProfileRequest>
+    public class ProfileController : Controller, IController<UserProfileRequest>
     {
         private readonly DatabaseCalls _db;
         private const string ProfileTable = "User_Profile";
@@ -22,7 +22,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] User_ProfileRequest item)
+        public async Task<IActionResult> Add([FromBody] UserProfileRequest item)
         {
             if (!ModelState.IsValid)
             {
@@ -69,7 +69,7 @@ namespace API.Controllers
         public async Task<IActionResult> Get()
         {
             var table = await _db.GetFromTableAsync(ProfileTable);
-            return Ok(new { data = (from DataRow row in table.Rows select User_Profile.CreateFromDataRow(row)).ToList() });
+            return Ok(new { data = (from DataRow row in table.Rows select UserProfile.CreateFromDataRow(row)).ToList() });
         }
 
         [HttpGet("user/{foreignId}")]
@@ -84,7 +84,7 @@ namespace API.Controllers
             {
                 return NotFound(new { error = $"Profile with ForeignId {foreignId} not found." });
             }
-            return Ok(new { data = User_Profile.CreateFromDataRow(res.Rows[0]) });
+            return Ok(new { data = UserProfile.CreateFromDataRow(res.Rows[0]) });
         }
 
         [AllowAnonymous]
@@ -115,7 +115,7 @@ namespace API.Controllers
             var projectsRes = await _db.GetFromTableFilteredAsync("Project", fdata);
             var programmingLanguagesRes = await _db.GetFromTableFilteredAsync("ProgrammingLanguage", fdata);
 
-            var profile = User_Profile.CreateFromDataRow(profileRes.Rows[0]);
+            var profile = UserProfile.CreateFromDataRow(profileRes.Rows[0]);
             var skills = new List<Skill>();
             var projects = new List<Project>();
             var hobbies = (from DataRow row in hobbiesRes.Rows select Hobby.CreateFromDataRow(row)).ToList();
@@ -158,11 +158,11 @@ namespace API.Controllers
                 return NotFound(new { error = $"User_Profile with ID {id} not found." });
             }
 
-            return Ok(new { data = User_Profile.CreateFromDataRow(res.Rows[0]) });
+            return Ok(new { data = UserProfile.CreateFromDataRow(res.Rows[0]) });
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id,[FromBody] User_ProfileRequest item)
+        public async Task<IActionResult> Update(int id,[FromBody] UserProfileRequest item)
         {
             if (id <= 0 || !ModelState.IsValid )
             {
