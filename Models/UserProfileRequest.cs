@@ -2,7 +2,7 @@
 
 namespace API.Models
 {
-    public class User_ProfileRequest
+    public class UserProfileRequest
     {
         [Required, StringLength(100)] public string Name { get; set; }
 
