@@ -3,13 +3,14 @@ using API.Structure;
 using API.Tables;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class UserController : Controller, IController<User>
+    public class UserController : Controller, IController<UserRequest>
     {
         private readonly DatabaseCalls _db;
         private const string UserTable = "User";
@@ -20,12 +21,16 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] User item)
+        public async Task<IActionResult> Add([FromBody] UserRequest item)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Username", item.Username },
-                { "@Password", item.Password }
+                { "@Password", LoginRequest.hashPassword(item.Password) }
             };
 
             var success = await _db.InsertAsync(UserTable, data);
@@ -33,8 +38,9 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Failed to add user." });
             }
-            item.Id = Convert.ToInt32(success);
-            return Ok(new { message = "Created User", data = item });
+            int newId = Convert.ToInt32(success);
+            var createdItem = await _db.GetFromTableAsync(UserTable, newId.ToString());
+            return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
@@ -76,19 +82,25 @@ namespace API.Controllers
             return Ok(new { data = Tables.User.CreateFromDataRow(res.Rows[0]) });
         }
 
-        public async Task<IActionResult> Update([FromBody] User item)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UserRequest item)
         {
+            if (id <= 0 || !ModelState.IsValid)
+            {
+                return BadRequest(new { error = "Invalid ID or model state.", ModelState });
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Username", item.Username },
-                { "@Password", item.Password }
+                { "@Password", LoginRequest.hashPassword(item.Password) }
             };
-            var success = await _db.UpdateAsync(UserTable, item.Id.ToString(), data);
+            var success = await _db.UpdateAsync(UserTable, id.ToString(), data);
             if (!success)
             {
-                return NotFound(new { error = $"User with ID {item.Id} not found." });
+                return NotFound(new { error = $"User with ID {id} not found." });
             }
-            return Ok(new { message = "User updated successfully", data = item });
+            var updatedItem = await _db.GetFromTableAsync(UserTable, id.ToString());
+            return Ok(new { message = "User updated successfully", data = updatedItem });
         }
     }
 }

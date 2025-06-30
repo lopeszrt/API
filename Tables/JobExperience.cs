@@ -8,13 +8,12 @@ namespace API.Tables
         public string Title { get; set; }
         public string Company { get; set; }
         public string Description { get; set; }
-        public string Recommendation { get; set; }
         public string StartDate { get; set; }
         public string EndDate { get; set; }
 
         public readonly int UserProfileId;
 
-        public JobExperience(int id, int userProfileId, string title, string company, string startDate, string description, string endDate = "", string recommendation = "")
+        public JobExperience(int id, int userProfileId, string title, string company, string startDate, string description, string endDate = "")
         {
             Id = id;
             Title = title;
@@ -22,7 +21,6 @@ namespace API.Tables
             StartDate = startDate;
             EndDate = endDate;
             Description = description;
-            Recommendation = recommendation;
             UserProfileId = userProfileId;
         }
 
@@ -35,8 +33,7 @@ namespace API.Tables
                 row["Company"].ToString(),
                 row["StartDate"].ToString(),
                 row["Description"].ToString(),
-                row.IsNull("EndDate") ? "" : row["EndDate"].ToString(),
-                row.IsNull("Recommendation") ? "" : row["Recommendation"].ToString()
+                row.IsNull("EndDate") ? "" : row["EndDate"].ToString()
             );
         }
     }

@@ -3,13 +3,14 @@ using API.Structure;
 using API.Tables;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class JobExperienceController : Controller, IController<JobExperience>
+    public class JobExperienceController : Controller, IController<JobExperienceRequest>
     {
         private readonly DatabaseCalls _db;
         private const string JobExperienceTable = "JobExperience";
@@ -20,16 +21,15 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] JobExperience item)
+        public async Task<IActionResult> Add([FromBody] JobExperienceRequest item)
         {
             var data = new Dictionary<string, object>
             {
                 { "@Company", item.Company },
                 { "@Title", item.Title },
                 { "@Description", item.Description },
-                { "@Recommendation", item.Recommendation},
                 { "@StartDate", item.StartDate },
-                { "@EndDate", item.EndDate},
+                { "@EndDate", item.EndDate ?? (object) DBNull.Value},
                 { "@UserProfileId", item.UserProfileId }
             };
             var success = await _db.InsertAsync(JobExperienceTable, data);
@@ -37,8 +37,9 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Failed to add job experience." });
             }
-            item.Id = Convert.ToInt32(success);
-            return Ok(new { message = "Created Job Experience", data = item });
+            int newId = Convert.ToInt32(success);
+            var createdItem = await _db.GetFromTableAsync(JobExperienceTable, newId.ToString());
+            return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
@@ -89,26 +90,31 @@ namespace API.Controllers
             return Ok(new { data = JobExperience.CreateFromDataRow(table.Rows[0]) });
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] JobExperience item)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id,[FromBody] JobExperienceRequest item)
         {
+            if ( id<= 0 || !ModelState.IsValid) 
+            {
+                return BadRequest(new { error = "Invalid ID or model state.", ModelState });
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Company", item.Company },
                 { "@Title", item.Title },
                 { "@Description", item.Description },
-                { "@Recommendation", item.Recommendation },
                 { "@StartDate", item.StartDate },
-                { "@EndDate", item.EndDate }
+                { "@EndDate", item.EndDate ?? (object)DBNull.Value}
             };
 
-            var success = await _db.UpdateAsync(JobExperienceTable, item.Id.ToString(), data);
+            var success = await _db.UpdateAsync(JobExperienceTable, id.ToString(), data);
             if (!success)
             {
-                return NotFound(new { error = $"Job Experience with ID {item.Id} not found." });
+                return NotFound(new { error = $"Job Experience with ID {id} not found." });
             }
 
-            return Ok(new { message = $"Job Experience with ID {item.Id} was updated.", data = item });
+            var updatedItem = await _db.GetFromTableAsync(JobExperienceTable, id.ToString());
+
+            return Ok(new { message = $"Job Experience with ID {id} was updated.", data = updatedItem });
         }
     }
 }

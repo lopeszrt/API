@@ -1,15 +1,17 @@
-﻿using API.Services;
+﻿using API.Models;
+using API.Services;
 using API.Structure;
 using API.Tables;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class ProgrammingLanguageController : Controller, IController<ProgrammingLanguage>
+    public class ProgrammingLanguageController : Controller, IController<ProgrammingLanguageRequest>
     {
         private readonly DatabaseCalls _db;
         private const string ProgrammingLanguageTable = "ProgrammingLanguage";
@@ -20,15 +22,20 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] ProgrammingLanguage item)
+        public async Task<IActionResult> Add([FromBody] ProgrammingLanguageRequest item)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
                 { "@UserProfileId", item.UserProfileId },
                 { "@Proficiency", item.Proficiency },
-                { "@Project_Id", item.ProjectId },
-                { "@Skill_Id", item.SkillId }
+                { "@Project_Id", item.ProjectId ?? (object) DBNull.Value},
+                { "@Skill_Id", item.SkillId ?? (object) DBNull.Value }
             };
 
             var success = await _db.InsertAsync("ProgrammingLanguage", data);
@@ -37,8 +44,9 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Failed to add programming language." });
             }
-            item.Id = Convert.ToInt32(success);
-            return Ok(new { message = "Created Programming Language", data = item });
+            int newId = Convert.ToInt32(success);
+            var createdItem = await _db.GetFromTableAsync(ProgrammingLanguageTable, newId.ToString());
+            return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
@@ -87,23 +95,29 @@ namespace API.Controllers
             return Ok(new { data = ProgrammingLanguage.CreateFromDataRow(result.Rows[0]) });
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] ProgrammingLanguage item)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id,[FromBody] ProgrammingLanguageRequest item)
         {
+            if (id <= 0 || !ModelState.IsValid)
+            {
+                return BadRequest(new { error = "Invalid ID or model state." , ModelState});
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
                 { "@Proficiency", item.Proficiency },
-                { "@Project_Id", item.ProjectId },
-                { "@Skill_Id", item.SkillId }
+                { "@Project_Id", item.ProjectId ??(object) DBNull.Value },
+                { "@Skill_Id", item.SkillId ??(object) DBNull.Value }
             };
 
-            var success = await _db.UpdateAsync(ProgrammingLanguageTable, item.Id.ToString(), data);
+            var success = await _db.UpdateAsync(ProgrammingLanguageTable, id.ToString(), data);
             if (!success)
             {
-                return NotFound(new { error = $"Programming Language with ID {item.Id} not found." });
+                return NotFound(new { error = $"Programming Language with ID {id} not found." });
             }
-            return Ok(new { message = $"Programming Language with ID {item.Id} was updated", data = item });
+            var updatedItem = await _db.GetFromTableAsync(ProgrammingLanguageTable, id.ToString());
+
+            return Ok(new { message = $"Programming Language with ID {id} was updated", data = updatedItem });
         }
     }
 }

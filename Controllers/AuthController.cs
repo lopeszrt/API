@@ -3,6 +3,7 @@ using API.Tables;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
+using API.Models;
 
 namespace API.Controllers
 {
@@ -17,24 +18,19 @@ namespace API.Controllers
         private const string UserTable = "User";
 
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] LoginRequest user)
+        public async Task<IActionResult> Login([FromBody] UserRequest request)
         {
-            if (string.IsNullOrEmpty(user.Username) || string.IsNullOrEmpty(user.Password))
-            {
-                return BadRequest(new
-                {
-                    error = "Password and Username are required"
-                });
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             var data = new Dictionary<string, object>
             {
-                { "Username", user.Username }
+                { "Username", request.Username }
             };
 
             var result = await _db.GetFromTableFilteredAsync(UserTable, data);
 
-            if (result == null || result.Rows.Count == 0)
+            if (result.Rows.Count == 0)
             {
                 return Unauthorized(new
                 {
@@ -42,10 +38,10 @@ namespace API.Controllers
                 });
             }
 
+            var user = LoginRequest.CreateFromDataRow(result.Rows[0]);
             var userId = result.Rows[0]["id"].ToString();
-            var hashedPassword = result.Rows[0]["Password"].ToString() ?? "";
 
-            if (!user.checkHashed(hashedPassword))
+            if (!user.checkHashed(request.Password))
             {
                 return Unauthorized(new
                 {
@@ -120,6 +116,51 @@ namespace API.Controllers
                 message = "User registered successfully.",
                 token = token
             });
+        }
+
+        [Authorize]
+        [HttpPut]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordRequest request)
+        {
+            if (string.IsNullOrEmpty(request.NewPassword) || string.IsNullOrEmpty(request.OldPassword))
+            {
+                return BadRequest(new { error = "Old and new passwords are required." });
+            }
+            var userId = User.FindFirst(CustomClaimTypes.UserId)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { error = "Invalid token." });
+            }
+            var data = new Dictionary<string, object>
+            {
+                { "id", userId }
+            };
+            var result = await _db.GetFromTableFilteredAsync(UserTable, data);
+
+            if (result.Rows.Count == 0)
+            {
+                return NotFound(new { error = "User not found." });
+            }
+
+            var loginRequest = LoginRequest.CreateFromDataRow(result.Rows[0]);
+            if (!loginRequest.checkHashed(request.OldPassword))
+            {
+                return Unauthorized(new { error = "Old password is incorrect." });
+            }
+
+            data = new Dictionary<string, object>
+            {
+                { "@Password", LoginRequest.hashPassword(request.NewPassword) }
+            };
+
+            var success = await _db.UpdateAsync(UserTable, userId,data);
+
+            if (!success)
+            {
+                return BadRequest(new { error = "Failed to update password." });
+            }
+
+            return Ok(new { message = "Password updated successfully." });
         }
 
         public AuthController(DatabaseCalls db, JwtService jwtService)

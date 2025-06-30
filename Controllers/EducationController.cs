@@ -4,12 +4,13 @@ using API.Tables;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EducationController : Controller, IController<Education>
+    public class EducationController : Controller, IController<EducationRequest>
     {
         private readonly DatabaseCalls _db;
         private const string EducationTable = "Education";
@@ -64,8 +65,13 @@ namespace API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update([FromBody] Education item)
+        public async Task<IActionResult> Update(int id, [FromBody] EducationRequest item)
         {
+            if (id <= 0 || !ModelState.IsValid)
+            {
+                return BadRequest(new { error = "Invalid ID or model state.", ModelState });
+            }
+
             var data = new Dictionary<string, object>
             {
                 { "@Degree", item.Degree },
@@ -75,25 +81,30 @@ namespace API.Controllers
                 { "@EndDate", item.EndDate ?? (object)DBNull.Value}
             };
 
-            var success = await _db.UpdateAsync(EducationTable, item.Id.ToString(), data);
+            var success = await _db.UpdateAsync(EducationTable, id.ToString(), data);
 
             if (!success)
             {
-                return NotFound(new { error = $"Education with ID {item.Id} not found." });
+                return NotFound(new { error = $"Education with ID {id} not found." });
             }
 
-            return Ok(new { message = $"Education with {item.Id} was updated", data = item });
+            var updatedItem = await _db.GetFromTableAsync(EducationTable, id.ToString());
+
+            return Ok(new { message = $"Education with {id} was updated", data = updatedItem });
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] Education item)
+        public async Task<IActionResult> Add([FromBody] EducationRequest item)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var data = new Dictionary<string, object>
             {
                 { "@Degree", item.Degree },
                 { "@Institution", item.Institution },
                 { "@Description", item.Description },
-                { "@UserProfileId", item.User_Profile_Id },
+                { "@UserProfileId", item.UserProfileId },
                 { "@StartDate", item.StartDate },
                 { "@EndDate", item.EndDate ?? "" }
             };
@@ -103,8 +114,9 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Failed to add education" });
             }
-            item.Id = Convert.ToInt32(success);
-            return Ok(new { message = "Created Education", data = item });
+            int newId = Convert.ToInt32(success);
+            var createdItem = await _db.GetFromTableAsync(EducationTable, newId.ToString());
+            return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]

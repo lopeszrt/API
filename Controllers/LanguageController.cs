@@ -3,13 +3,14 @@ using API.Structure;
 using API.Tables;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class LanguageController : Controller, IController<Language>
+    public class LanguageController : Controller, IController<LanguageRequest>
     {
         private readonly DatabaseCalls _db;
         private const string LanguageTable = "Language";
@@ -20,8 +21,12 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] Language item)
+        public async Task<IActionResult> Add([FromBody] LanguageRequest item)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
@@ -34,8 +39,9 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Failed to add language." });
             }
-            item.Id = Convert.ToInt32(success);
-            return Ok(new { message = "Created Language", data = item });
+            int newId = Convert.ToInt32(success);
+            var createdItem = await _db.GetFromTableAsync(LanguageTable, newId.ToString());
+            return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
@@ -85,20 +91,25 @@ namespace API.Controllers
             return Ok(new { data = Language.CreateFromDataRow(table.Rows[0]) });
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] Language item)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id,[FromBody] LanguageRequest item)
         {
+            if (!ModelState.IsValid || id <= 0)
+            {
+                return BadRequest(new { error = "Invalid ID or model state.", ModelState });
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
                 { "@Proficiency", item.Proficiency }
             };
-            var success = await _db.UpdateAsync(LanguageTable, item.Id.ToString(), data);
+            var success = await _db.UpdateAsync(LanguageTable, id.ToString(), data);
             if (!success)
             {
-                return NotFound(new { error = $"Language with ID {item.Id} not found." });
+                return NotFound(new { error = $"Language with ID {id} not found." });
             }
-            return Ok(new { message = "Language updated successfully.", data = item });
+            var updatedItem = await _db.GetFromTableAsync(LanguageTable, id.ToString());
+            return Ok(new { message = "Language updated successfully.", data = updatedItem });
         }
     }
 }

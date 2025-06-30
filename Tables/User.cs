@@ -9,7 +9,7 @@ namespace API.Tables
 
         public bool checkHashed(string password)
         {
-            return BCrypt.Net.BCrypt.Verify(Password,password);
+            return BCrypt.Net.BCrypt.Verify(password, this.Password);
         }
 
         public static string hashPassword(string password)
@@ -21,6 +21,14 @@ namespace API.Tables
         {
             Username = username;
             Password = password;
+        }
+
+        public static LoginRequest CreateFromDataRow(DataRow row)
+        {
+            return new LoginRequest(
+                row["Username"].ToString(),
+                row["Password"].ToString()
+            );
         }
     }
 

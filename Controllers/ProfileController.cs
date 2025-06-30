@@ -4,13 +4,14 @@ using API.Tables;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class ProfileController : Controller, IController<User_Profile>
+    public class ProfileController : Controller, IController<User_ProfileRequest>
     {
         private readonly DatabaseCalls _db;
         private const string ProfileTable = "User_Profile";
@@ -21,8 +22,12 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] User_Profile item)
+        public async Task<IActionResult> Add([FromBody] User_ProfileRequest item)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
@@ -33,7 +38,7 @@ namespace API.Controllers
                 { "@LinkedIn", item.LinkedIn },
                 { "@GitHub", item.GitHub },
                 { "@Route", item.Route },
-                { "@Image", item.ImageUrl },
+                { "@Image", item.ImageUrl ?? (object) DBNull.Value },
                 { "@PublicPhone", item.PublicPhone},
                 { "@PublicEmail", item.PublicEmail},
                 { "@UserId", item.UserId }
@@ -43,8 +48,10 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Failed to add profile." });
             }
-            item.Id = Convert.ToInt32(success);
-            return Ok(new { message = "Created Profile", data = item });
+            int newId = Convert.ToInt32(success);
+
+            var createdItem = await _db.GetFromTableAsync(ProfileTable, newId.ToString());
+            return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
@@ -154,9 +161,13 @@ namespace API.Controllers
             return Ok(new { data = User_Profile.CreateFromDataRow(res.Rows[0]) });
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] User_Profile item)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id,[FromBody] User_ProfileRequest item)
         {
+            if (id <= 0 || !ModelState.IsValid )
+            {
+                return BadRequest(new { error = "Invalid ID or model state.", ModelState });
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
@@ -167,18 +178,19 @@ namespace API.Controllers
                 { "@LinkedIn", item.LinkedIn },
                 { "@GitHub", item.GitHub },
                 { "@Route", item.Route },
-                { "@Image", item.ImageUrl },
+                { "@Image", item.ImageUrl ?? (object) DBNull.Value },
                 { "@PublicPhone", item.PublicPhone },
                 { "@PublicEmail", item.PublicEmail }
             };
 
-            var res = await _db.UpdateAsync(ProfileTable, item.Id.ToString(), data);
+            var res = await _db.UpdateAsync(ProfileTable, id.ToString(), data);
             if (!res)
             {
                 return BadRequest(new { error = "Failed to update profile." });
             }
+            var updatedItem = await _db.GetFromTableAsync(ProfileTable, id.ToString());
 
-            return Ok(new { message = $"User_Profile with ID {item.Id} was updated", data = item });
+            return Ok(new { message = $"User_Profile with ID {id} was updated", data = updatedItem });
         }
     }
 }

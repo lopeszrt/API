@@ -13,7 +13,7 @@ namespace API.Tables
         public string? EndDate { get; set; }
         public string StartDate { get; set; }
 
-        public readonly int User_Profile_Id;
+        public readonly int UserProfileId;
 
         public Education(int id, int userProfileId, string degree, string description, string institution, string startDate, string? endDate = "")
         {
@@ -23,7 +23,7 @@ namespace API.Tables
             StartDate = startDate;
             EndDate = endDate;
             Description = description;
-            User_Profile_Id = userProfileId;
+            UserProfileId = userProfileId;
         }
 
         public static Education CreateFromDataRow(DataRow row)

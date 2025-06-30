@@ -3,13 +3,14 @@ using API.Structure;
 using API.Tables;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class ProjectController : Controller, IController<Project>
+    public class ProjectController : Controller, IController<ProjectRequest>
     {
         private readonly DatabaseCalls _db;
         private const string ProjectTable = "Project";
@@ -60,42 +61,53 @@ namespace API.Controllers
             return Ok(new { data = (from DataRow row in table.Rows select Project.CreateFromDataRow(row)).ToList() });
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] Project item)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id,[FromBody] ProjectRequest item)
         {
+            if (id <= 0 || !ModelState.IsValid )
+            {
+                return BadRequest(new { error = "Invalid ID or model state.", ModelState });
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
                 { "@Description", item.Description },
-                { "@ImageUrl", item.ImageUrl},
-                { "@Link", item.Link}
+                { "@ImageUrl", item.ImageUrl ??(object) DBNull.Value},
+                { "@Link", item.Link ??(object) DBNull.Value}
             };
 
-            var success = await _db.UpdateAsync(ProjectTable, item.Id.ToString(), data);
+            var success = await _db.UpdateAsync(ProjectTable, id.ToString(), data);
             if (!success)
             {
-                return NotFound(new { error = $"Project with ID {item.Id} not found." });
+                return NotFound(new { error = $"Project with ID {id} not found." });
             }
-            return Ok(new { message = "Project updated successfully.", data = item });
+            var updatedItem = await _db.GetFromTableAsync(ProjectTable, id.ToString());
+            return Ok(new { message = "Project updated successfully.", data = updatedItem });
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] Project item)
+        public async Task<IActionResult> Add([FromBody] ProjectRequest item)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
                 { "@Description", item.Description },
                 { "@UserProfileId", item.UserProfileId },
-                { "@Link", item.Link }
+                { "@Link", item.Link ??(object) DBNull.Value }
             };
             var success = await _db.InsertAsync(ProjectTable, data);
             if (success == -1)
             {
                 return BadRequest(new { error = "Failed to add project." });
             }
-            item.Id = Convert.ToInt32(success);
-            return Ok(new { message = "Created Project", data = item });
+            int newId = Convert.ToInt32(success);
+            var createdItem = await _db.GetFromTableAsync(ProjectTable, newId.ToString());
+            return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]

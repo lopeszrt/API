@@ -4,13 +4,14 @@ using API.Tables;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class HobbyController : Controller, IController<Hobby>
+    public class HobbyController : Controller, IController<HobbyRequest>
     {
         private readonly DatabaseCalls _db;
         private const string HobbyTable = "Hobby";
@@ -21,8 +22,12 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] Hobby item)
+        public async Task<IActionResult> Add([FromBody] HobbyRequest item)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
@@ -33,8 +38,9 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Failed to add hobby." });
             }
-            item.Id = Convert.ToInt32(success);
-            return Ok(new { message = "Created Hobby", data = item });
+            int newId = Convert.ToInt32(success);
+            var createdItem = await _db.GetFromTableAsync(HobbyTable, newId.ToString());
+            return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
@@ -90,20 +96,27 @@ namespace API.Controllers
             return Ok(new { data = (from DataRow row in res.Rows select Hobby.CreateFromDataRow(row)).ToList() });
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] Hobby item)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id,[FromBody] HobbyRequest item)
         {
+            if (id <= 0 || !ModelState.IsValid)
+            {
+                return BadRequest(new { error = "Invalid ID or model state.", ModelState });
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
             };
 
-            var success = await _db.UpdateAsync(HobbyTable, item.Id.ToString(), data);
+            var success = await _db.UpdateAsync(HobbyTable, id.ToString(), data);
             if (!success)
             {
-                return NotFound(new { error = $"Hobby with ID {item.Id} not found." });
+                return NotFound(new { error = $"Hobby with ID {id} not found." });
             }
-            return Ok(new { message = $"Hobby with ID {item.Id} was updated", data = item });
+
+            var updatedItem = await _db.GetFromTableAsync(HobbyTable, id.ToString());
+
+            return Ok(new { message = $"Hobby with ID {id} was updated", data = updatedItem });
         }
     }
 }

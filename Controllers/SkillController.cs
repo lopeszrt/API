@@ -3,13 +3,14 @@ using API.Structure;
 using API.Tables;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class SkillController : Controller, IController<Skill>
+    public class SkillController : Controller, IController<SkillRequest>
     {
         private readonly DatabaseCalls _db;
         private const string SkillTable = "Skill";
@@ -20,13 +21,17 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] Skill item)
+        public async Task<IActionResult> Add([FromBody] SkillRequest item)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
                 { "@UserProfileId", item.UserProfileId },
-                { "@Description", item.Description }
+                { "@Description", item.Description ?? (object) DBNull.Value }
             };
 
             var success = await _db.InsertAsync(SkillTable, data);
@@ -34,8 +39,9 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Failed to add skill." });
             }
-            item.Id = Convert.ToInt32(success);
-            return Ok(new { message = "Created Skill", data = item });
+            int newId = Convert.ToInt32(success);
+            var createdItem = await _db.GetFromTableAsync(SkillTable, newId.ToString());
+            return CreatedAtAction(nameof(GetById),new {id=newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
@@ -60,7 +66,7 @@ namespace API.Controllers
             var table = await _db.GetFromTableAsync(SkillTable);
             return Ok(new { data = (from DataRow row in table.Rows select Skill.CreateFromDataRow(row)).ToList() });
         }
-
+        [HttpGet("profile/{foreignId}")]
         public async Task<IActionResult> GetByForeignId(int foreignId)
         {
             var data = new Dictionary<string, object>
@@ -75,6 +81,7 @@ namespace API.Controllers
             return Ok(new { data = (from DataRow row in res.Rows select Skill.CreateFromDataRow(row)).ToList() });
         }
 
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             if (id <= 0)
@@ -89,20 +96,26 @@ namespace API.Controllers
             return Ok(new { data = Skill.CreateFromDataRow(table.Rows[0]) });
         }
 
-        public async Task<IActionResult> Update([FromBody] Skill item)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id,[FromBody] SkillRequest item)
         {
+            if (id <= 0 || !ModelState.IsValid)
+            {
+                return BadRequest(new { error = "Invalid ID or model state.", ModelState });
+            }
             var data = new Dictionary<string, object>
             {
                 { "@Name", item.Name },
-                { "@Description", item.Description }
+                { "@Description", item.Description ?? (object) DBNull.Value }
             };
 
-            var success = await _db.UpdateAsync(SkillTable, item.Id.ToString(), data);
+            var success = await _db.UpdateAsync(SkillTable, id.ToString(), data);
             if (!success)
             {
-                return NotFound(new { error = $"Skill with ID {item.Id} not found." });
+                return NotFound(new { error = $"Skill with ID {id} not found." });
             }
-            return Ok(new { message = "Updated Skill", data = item });
+            var updatedItem = await _db.GetFromTableAsync(SkillTable, id.ToString());
+            return Ok(new { message = "Updated Skill", data = updatedItem });
         }
     }
 }

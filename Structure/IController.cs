@@ -10,7 +10,7 @@ namespace API.Structure
 
         Task<IActionResult> GetByForeignId(int foreignId);
 
-        Task<IActionResult> Update([FromBody] T item);
+        Task<IActionResult> Update(int id,[FromBody] T item);
 
         Task<IActionResult> Add([FromBody] T item);
 
