@@ -73,10 +73,16 @@ if (jwtSettings.Exists())
         app.UseSwaggerUI();
     }
 
+    var imagesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+
+    if (!Directory.Exists(imagesPath))
+    {
+        Directory.CreateDirectory(imagesPath);
+    }
+
     app.UseStaticFiles(new StaticFileOptions
     {
-        FileProvider = new PhysicalFileProvider(
-            Path.Combine(Directory.GetCurrentDirectory(), uploadPath)),
+        FileProvider = new PhysicalFileProvider(imagesPath),
         RequestPath = "/images"
     });
 
