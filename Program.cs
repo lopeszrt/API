@@ -14,7 +14,8 @@ builder.Configuration.AddEnvironmentVariables();
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var uploadPath = builder.Configuration["UPLOAD_PATH"];
 var publicBaseUrl = builder.Configuration["PUBLIC_BASE_URL"];
-
+System.Console.WriteLine($"UPLOAD_PATH: {uploadPath}");
+System.Console.WriteLine($"PUBLIC_BASE_URL: {publicBaseUrl}");
 if (jwtSettings.Exists())
 {
     var secretKey = jwtSettings["SecretKey"];
