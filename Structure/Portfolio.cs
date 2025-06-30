@@ -4,7 +4,7 @@ namespace API.Structure
 {
     public class Portfolio
     {
-        public Portfolio(User_Profile profile, List<Education> lstEducations, List<JobExperience> lstJobExperiences, List<Hobby> lstHobbies, List<Skill> lstSkills, List<Language> lstLanguages, List<Project> lstProjects)
+        public Portfolio(UserProfile profile, List<Education> lstEducations, List<JobExperience> lstJobExperiences, List<Hobby> lstHobbies, List<Skill> lstSkills, List<Language> lstLanguages, List<Project> lstProjects)
         {
             Name = profile.Name;
             Email = profile.PublicEmail ? profile.Email : "";

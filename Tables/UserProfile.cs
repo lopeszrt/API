@@ -2,7 +2,7 @@
 
 namespace API
 {
-    public class User_Profile
+    public class UserProfile
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -21,7 +21,7 @@ namespace API
         public readonly int UserId;
 
 
-        public User_Profile(int id, string name, string description, string email, string phone, string location,
+        public UserProfile(int id, string name, string description, string email, string phone, string location,
             string linkedIn, string gitHub, int userId, bool publicPhone, bool publicEmail ,string? route, string imageURL = "")
         {
             Id = id;
@@ -39,9 +39,9 @@ namespace API
             PublicEmail = publicEmail;
         }
 
-        public static User_Profile CreateFromDataRow(DataRow row)
+        public static UserProfile CreateFromDataRow(DataRow row)
         {
-            return new User_Profile(
+            return new UserProfile(
                 Convert.ToInt32(row["id"]),
                 row["Name"].ToString(),
                 row["Description"].ToString(),
