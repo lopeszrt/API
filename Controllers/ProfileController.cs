@@ -38,7 +38,7 @@ namespace API.Controllers
                 { "@LinkedIn", item.LinkedIn },
                 { "@GitHub", item.GitHub },
                 { "@Route", item.Route },
-                { "@Image", item.ImageUrl ?? (object) DBNull.Value },
+                { "@ImageUrl", item.ImageUrl ?? (object) DBNull.Value },
                 { "@PublicPhone", item.PublicPhone},
                 { "@PublicEmail", item.PublicEmail},
                 { "@UserId", item.UserId }
@@ -178,7 +178,7 @@ namespace API.Controllers
                 { "@LinkedIn", item.LinkedIn },
                 { "@GitHub", item.GitHub },
                 { "@Route", item.Route },
-                { "@Image", item.ImageUrl ?? (object) DBNull.Value },
+                { "@ImageUrl", item.ImageUrl ?? (object) DBNull.Value },
                 { "@PublicPhone", item.PublicPhone },
                 { "@PublicEmail", item.PublicEmail }
             };

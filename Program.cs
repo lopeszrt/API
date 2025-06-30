@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.Extensions.FileProviders;
 
 DotNetEnv.Env.Load();
 
@@ -11,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var uploadPath = builder.Configuration["UPLOAD_PATH"];
+var publicBaseUrl = builder.Configuration["PUBLIC_BASE_URL"];
 
 if (jwtSettings.Exists())
 {
@@ -23,6 +26,11 @@ if (jwtSettings.Exists())
     string.IsNullOrWhiteSpace(audience))
     {
         throw new InvalidOperationException("One or more JwtSettings values are missing.");
+    }
+
+    if (string.IsNullOrWhiteSpace(uploadPath) || string.IsNullOrWhiteSpace(publicBaseUrl))
+    {
+        throw new InvalidOperationException("UPLOAD_PATH or PUBLIC_BASE_URL is not configured.");
     }
 
     builder.Services.AddScoped<Database>();
@@ -64,6 +72,13 @@ if (jwtSettings.Exists())
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(
+            Path.Combine(Directory.GetCurrentDirectory(), uploadPath)),
+        RequestPath = "/images"
+    });
 
     app.UseHttpsRedirection();
     app.UseAuthentication();

@@ -54,7 +54,7 @@ namespace API
                 row.IsNull("PublicPhone") || Convert.ToBoolean(row["PublicPhone"]),
                 row.IsNull("PublicEmail") || Convert.ToBoolean(row["PublicEmail"]),
                 row.IsNull("Route") ? "" : row["Route"].ToString(),
-                row.IsNull("Image") ? "" : row["ImageUrl"].ToString()
+                row.IsNull("ImageUrl") ? "" : row["ImageUrl"].ToString()
             );
         }
     }
