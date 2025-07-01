@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace API
+namespace API.Tables
 {
     public class UserProfile
     {
@@ -22,7 +22,7 @@ namespace API
 
 
         public UserProfile(int id, string name, string description, string email, string phone, string location,
-            string linkedIn, string gitHub, int userId, bool publicPhone, bool publicEmail ,string? route, string imageURL = "")
+            string linkedIn, string gitHub, int userId, bool publicPhone, bool publicEmail ,string route, string imageUrl = "")
         {
             Id = id;
             Name = name;
@@ -34,7 +34,7 @@ namespace API
             GitHub = gitHub;
             UserId = userId;
             Route = route;
-            ImageUrl = imageURL;
+            ImageUrl = imageUrl;
             PublicPhone = publicPhone;
             PublicEmail = publicEmail;
         }
@@ -43,18 +43,18 @@ namespace API
         {
             return new UserProfile(
                 Convert.ToInt32(row["id"]),
-                row["Name"].ToString(),
-                row["Description"].ToString(),
-                row["Email"].ToString(),
-                row["Phone"].ToString(),
-                row["Location"].ToString(),
-                row["LinkedIn"].ToString(),
-                row["GitHub"].ToString(),
+                row["Name"].ToString() ?? "",
+                row["Description"].ToString() ?? "",
+                row["Email"].ToString() ?? "",
+                row["Phone"].ToString() ?? "",
+                row["Location"].ToString() ?? "",
+                row["LinkedIn"].ToString() ?? "",
+                row["GitHub"].ToString() ?? "",
                 Convert.ToInt32(row["UserId"]),
                 row.IsNull("PublicPhone") || Convert.ToBoolean(row["PublicPhone"]),
                 row.IsNull("PublicEmail") || Convert.ToBoolean(row["PublicEmail"]),
-                row.IsNull("Route") ? "" : row["Route"].ToString(),
-                row.IsNull("ImageUrl") ? "" : row["ImageUrl"].ToString()
+                row.IsNull("Route") ? "" : row["Route"].ToString() ?? "",
+                row.IsNull("ImageUrl") ? "" : row["ImageUrl"].ToString() ?? ""
             );
         }
     }

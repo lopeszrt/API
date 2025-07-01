@@ -5,9 +5,9 @@ namespace API.Models
     public class HobbyRequest
     {
         [Required, StringLength(100)]
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         [Required]
-        public int UserProfileId { get; set; }
+        public required int UserProfileId { get; set; }
     }
 }

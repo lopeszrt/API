@@ -5,10 +5,10 @@ namespace API.Models
     public class LanguageRequest
     {
         [Required, StringLength(100)]
-        public string Name { get; set; }
+        public required string Name { get; set; }
         [Required, StringLength(100)]
-        public string Proficiency { get; set; }
+        public required string Proficiency { get; set; }
         [Required]
-        public int UserProfileId { get; set; }
+        public required int UserProfileId { get; set; }
     }
 }

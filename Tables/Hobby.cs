@@ -20,7 +20,7 @@ namespace API.Tables
         {
             return new Hobby(
                 Convert.ToInt32(row["id"]),
-                row["Name"].ToString(),
+                row["Name"].ToString() ?? "",
                 Convert.ToInt32(row["UserProfileId"])
             );
         }

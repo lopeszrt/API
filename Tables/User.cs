@@ -7,12 +7,12 @@ namespace API.Tables
         public string Username { get; set; }
         public string Password { get; set; }
 
-        public bool checkHashed(string password)
+        public bool CheckHashed(string password)
         {
             return BCrypt.Net.BCrypt.Verify(password, this.Password);
         }
 
-        public static string hashPassword(string password)
+        public static string HashPassword(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
         }
@@ -26,8 +26,8 @@ namespace API.Tables
         public static LoginRequest CreateFromDataRow(DataRow row)
         {
             return new LoginRequest(
-                row["Username"].ToString(),
-                row["Password"].ToString()
+                row["Username"].ToString() ?? "",
+                row["Password"].ToString() ?? ""
             );
         }
     }
@@ -49,8 +49,8 @@ namespace API.Tables
         {
             return new User(
                 Convert.ToInt32(row["id"]),
-                row["Username"].ToString(),
-                row["Password"].ToString()
+                row["Username"].ToString() ?? "",
+                row["Password"].ToString() ?? ""
             );
         }
     }

@@ -13,7 +13,6 @@ namespace API.Controllers
     public class JobExperienceController : Controller, IController<JobExperienceRequest>
     {
         private readonly DatabaseCalls _db;
-        private const string JobExperienceTable = "JobExperience";
 
         public JobExperienceController(DatabaseCalls db)
         {
@@ -32,20 +31,20 @@ namespace API.Controllers
                 { "@EndDate", item.EndDate ?? (object) DBNull.Value},
                 { "@UserProfileId", item.UserProfileId }
             };
-            var success = await _db.InsertAsync(JobExperienceTable, data);
+            var success = await _db.InsertAsync(TableName.JobExperience, data);
             if (success == -1)
             {
                 return BadRequest(new { error = "Failed to add job experience." });
             }
             int newId = Convert.ToInt32(success);
-            var createdItem = await _db.GetFromTableAsync(JobExperienceTable, newId.ToString());
+            var createdItem = await _db.GetFromTableAsync(TableName.JobExperience, newId.ToString());
             return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _db.DeleteAsync(JobExperienceTable, id.ToString());
+            var result = await _db.DeleteAsync(TableName.JobExperience, id.ToString());
             if (!result)
             {
                 return NotFound(new { error = $"Job Experience with ID {id} not found." });
@@ -56,7 +55,7 @@ namespace API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var result = await _db.GetFromTableAsync(JobExperienceTable);
+            var result = await _db.GetFromTableAsync(TableName.JobExperience);
             return Ok(new { data = (from DataRow row in result.Rows select JobExperience.CreateFromDataRow(row)).ToList() });
         }
 
@@ -67,7 +66,7 @@ namespace API.Controllers
             {
                 { "UserProfileId", profileId }
             };
-            var result = await _db.GetFromTableFilteredAsync(JobExperienceTable, data);
+            var result = await _db.GetFromTableFilteredAsync(TableName.JobExperience, data);
             if (result.Rows.Count == 0)
             {
                 return NotFound(new { error = $"No job experiences found for profile ID {profileId}." });
@@ -82,7 +81,7 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Invalid ID." });
             }
-            var table = await _db.GetFromTableAsync(JobExperienceTable, id.ToString());
+            var table = await _db.GetFromTableAsync(TableName.JobExperience, id.ToString());
             if (table.Rows.Count == 0)
             {
                 return NotFound(new { error = $"Job Experience with ID {id} not found." });
@@ -106,13 +105,13 @@ namespace API.Controllers
                 { "@EndDate", item.EndDate ?? (object)DBNull.Value}
             };
 
-            var success = await _db.UpdateAsync(JobExperienceTable, id.ToString(), data);
+            var success = await _db.UpdateAsync(TableName.JobExperience, id.ToString(), data);
             if (!success)
             {
                 return NotFound(new { error = $"Job Experience with ID {id} not found." });
             }
 
-            var updatedItem = await _db.GetFromTableAsync(JobExperienceTable, id.ToString());
+            var updatedItem = await _db.GetFromTableAsync(TableName.JobExperience, id.ToString());
 
             return Ok(new { message = $"Job Experience with ID {id} was updated.", data = updatedItem });
         }

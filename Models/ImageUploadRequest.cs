@@ -10,6 +10,6 @@ namespace API.Models
         [DataType(DataType.Upload)]
         [MaxFileSize(5 * 1024 * 1024)] // 5MB limit (custom attribute)
         [AllowedExtensions(new string[] { ".jpg", ".jpeg", ".png" })] // Custom attribute
-        public IFormFile Image { get; set; }
+        public required IFormFile Image { get; set; }
     }
 }

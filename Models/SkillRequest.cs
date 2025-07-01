@@ -5,10 +5,10 @@ namespace API.Models
     public class SkillRequest
     {
         [Required, StringLength(100)]
-        public string Name { get; set; }
+        public required string Name { get; set; }
         [Required]
         public string? Description { get; set; }
         [Required]
-        public int UserProfileId { get; set; }
+        public required int UserProfileId { get; set; }
     }
 }

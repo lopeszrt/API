@@ -29,11 +29,11 @@ namespace API.Tables
             return new JobExperience(
                 Convert.ToInt32(row["id"]),
                 Convert.ToInt32(row["UserProfileId"]),
-                row["Title"].ToString(),
-                row["Company"].ToString(),
-                row["StartDate"].ToString(),
-                row["Description"].ToString(),
-                row.IsNull("EndDate") ? "" : row["EndDate"].ToString()
+                row["Title"].ToString() ?? "",
+                row["Company"].ToString() ?? "",
+                row["StartDate"].ToString() ?? "",
+                row["Description"].ToString() ?? "",
+                row["EndDate"].ToString() ?? ""
             );
         }
     }

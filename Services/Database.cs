@@ -81,5 +81,21 @@ namespace API.Services
 
             return await command.ExecuteScalarAsync();
         }
+
+        public async Task<bool> TestConnectionAsync()
+        {
+            try
+            {
+                await using var connection = new MySqlConnection(_connectionString);
+                await connection.OpenAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Database connection failed: {ex.Message}");
+                return false;
+            }
+        }
+
     }
 }

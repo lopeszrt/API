@@ -13,9 +13,8 @@ namespace API.Controllers
     public class UserController : Controller, IController<UserRequest>
     {
         private readonly DatabaseCalls _db;
-        private const string UserTable = "User";
 
-        public UserController(DatabaseCalls db)
+        public UserController(DatabaseCalls db, JwtService jwtService)
         {
             _db = db;
         }
@@ -30,16 +29,16 @@ namespace API.Controllers
             var data = new Dictionary<string, object>
             {
                 { "@Username", item.Username },
-                { "@Password", LoginRequest.hashPassword(item.Password) }
+                { "@Password", LoginRequest.HashPassword(item.Password) }
             };
 
-            var success = await _db.InsertAsync(UserTable, data);
+            var success = await _db.InsertAsync(TableName.User, data);
             if (success == -1)
             {
                 return BadRequest(new { error = "Failed to add user." });
             }
             int newId = Convert.ToInt32(success);
-            var createdItem = await _db.GetFromTableAsync(UserTable, newId.ToString());
+            var createdItem = await _db.GetFromTableAsync(TableName.User, newId.ToString());
             return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
@@ -50,7 +49,7 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Invalid user ID." });
             }
-            var success = await _db.DeleteAsync(UserTable, id.ToString());
+            var success = await _db.DeleteAsync(TableName.User, id.ToString());
             if (!success)
             {
                 return NotFound(new { error = $"User with ID {id} not found." });
@@ -61,12 +60,11 @@ namespace API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var table = await _db.GetFromTableAsync(UserTable);
+            var table = await _db.GetFromTableAsync(TableName.User);
             return Ok(new { data = (from DataRow row in table.Rows select Tables.User.CreateFromDataRow(row)).ToList() });
         }
 
-        [HttpGet("profile/{foreignId}")]
-        public async Task<IActionResult> GetByForeignId(int foreignId)
+        public Task<IActionResult> GetByForeignId(int foreignId)
         {
             throw new NotImplementedException();
         }
@@ -74,7 +72,7 @@ namespace API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var res = await _db.GetFromTableAsync(UserTable, id.ToString());
+            var res = await _db.GetFromTableAsync(TableName.User, id.ToString());
             if (res.Rows.Count == 0)
             {
                 return NotFound(new { error = $"User with ID {id} not found." });
@@ -92,14 +90,14 @@ namespace API.Controllers
             var data = new Dictionary<string, object>
             {
                 { "@Username", item.Username },
-                { "@Password", LoginRequest.hashPassword(item.Password) }
+                { "@Password", LoginRequest.HashPassword(item.Password) }
             };
-            var success = await _db.UpdateAsync(UserTable, id.ToString(), data);
+            var success = await _db.UpdateAsync(TableName.User, id.ToString(), data);
             if (!success)
             {
                 return NotFound(new { error = $"User with ID {id} not found." });
             }
-            var updatedItem = await _db.GetFromTableAsync(UserTable, id.ToString());
+            var updatedItem = await _db.GetFromTableAsync(TableName.User, id.ToString());
             return Ok(new { message = "User updated successfully", data = updatedItem });
         }
     }

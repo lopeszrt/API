@@ -13,7 +13,6 @@ namespace API.Controllers
     public class SkillController : Controller, IController<SkillRequest>
     {
         private readonly DatabaseCalls _db;
-        private const string SkillTable = "Skill";
 
         public SkillController(DatabaseCalls db)
         {
@@ -34,13 +33,13 @@ namespace API.Controllers
                 { "@Description", item.Description ?? (object) DBNull.Value }
             };
 
-            var success = await _db.InsertAsync(SkillTable, data);
+            var success = await _db.InsertAsync(TableName.Skill, data);
             if (success == -1)
             {
                 return BadRequest(new { error = "Failed to add skill." });
             }
             int newId = Convert.ToInt32(success);
-            var createdItem = await _db.GetFromTableAsync(SkillTable, newId.ToString());
+            var createdItem = await _db.GetFromTableAsync(TableName.Skill, newId.ToString());
             return CreatedAtAction(nameof(GetById),new {id=newId}, createdItem);
         }
 
@@ -52,7 +51,7 @@ namespace API.Controllers
                 return BadRequest(new { error = "Invalid ID." });
             }
 
-            var success = await _db.DeleteAsync(SkillTable, id.ToString());
+            var success = await _db.DeleteAsync(TableName.Skill, id.ToString());
             if (!success)
             {
                 return NotFound(new { error = $"Skill with ID {id} not found." });
@@ -63,7 +62,7 @@ namespace API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var table = await _db.GetFromTableAsync(SkillTable);
+            var table = await _db.GetFromTableAsync(TableName.Skill);
             return Ok(new { data = (from DataRow row in table.Rows select Skill.CreateFromDataRow(row)).ToList() });
         }
         [HttpGet("profile/{foreignId}")]
@@ -73,7 +72,7 @@ namespace API.Controllers
             {
                 { "UserProfileId", foreignId }
             };
-            var res = await _db.GetFromTableFilteredAsync(SkillTable, data);
+            var res = await _db.GetFromTableFilteredAsync(TableName.Skill, data);
             if (res.Rows.Count == 0)
             {
                 return NotFound(new { error = $"No skills found for User Profile ID {foreignId}." });
@@ -88,7 +87,7 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Invalid ID." });
             }
-            var table = await _db.GetFromTableAsync(SkillTable, id.ToString());
+            var table = await _db.GetFromTableAsync(TableName.Skill, id.ToString());
             if (table.Rows.Count == 0)
             {
                 return NotFound(new { error = $"Skill with ID {id} not found." });
@@ -109,12 +108,12 @@ namespace API.Controllers
                 { "@Description", item.Description ?? (object) DBNull.Value }
             };
 
-            var success = await _db.UpdateAsync(SkillTable, id.ToString(), data);
+            var success = await _db.UpdateAsync(TableName.Skill, id.ToString(), data);
             if (!success)
             {
                 return NotFound(new { error = $"Skill with ID {id} not found." });
             }
-            var updatedItem = await _db.GetFromTableAsync(SkillTable, id.ToString());
+            var updatedItem = await _db.GetFromTableAsync(TableName.Skill, id.ToString());
             return Ok(new { message = "Updated Skill", data = updatedItem });
         }
     }

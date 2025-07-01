@@ -13,7 +13,6 @@ namespace API.Controllers
     public class LanguageController : Controller, IController<LanguageRequest>
     {
         private readonly DatabaseCalls _db;
-        private const string LanguageTable = "Language";
 
         public LanguageController(DatabaseCalls db)
         {
@@ -34,20 +33,20 @@ namespace API.Controllers
                 { "@Proficiency", item.Proficiency},
             };
 
-            var success = await _db.InsertAsync(LanguageTable, data);
+            var success = await _db.InsertAsync(TableName.Language, data);
             if (success == -1)
             {
                 return BadRequest(new { error = "Failed to add language." });
             }
             int newId = Convert.ToInt32(success);
-            var createdItem = await _db.GetFromTableAsync(LanguageTable, newId.ToString());
+            var createdItem = await _db.GetFromTableAsync(TableName.Language, newId.ToString());
             return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _db.DeleteAsync(LanguageTable, id.ToString());
+            var success = await _db.DeleteAsync(TableName.Language, id.ToString());
             if (!success)
             {
                 return NotFound(new { error = $"Language with ID {id} not found." });
@@ -58,7 +57,7 @@ namespace API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var table = await _db.GetFromTableAsync(LanguageTable);
+            var table = await _db.GetFromTableAsync(TableName.Language);
             return Ok(new { data = (from DataRow row in table.Rows select Language.CreateFromDataRow(row)).ToList() });
         }
 
@@ -70,7 +69,7 @@ namespace API.Controllers
                 { "UserProfileId", foreignId }
             };
 
-            var res = await _db.GetFromTableFilteredAsync(LanguageTable, data);
+            var res = await _db.GetFromTableFilteredAsync(TableName.Language, data);
 
             if (res.Rows.Count == 0)
             {
@@ -83,7 +82,7 @@ namespace API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var table = await _db.GetFromTableAsync(LanguageTable, id.ToString());
+            var table = await _db.GetFromTableAsync(TableName.Language, id.ToString());
             if (table.Rows.Count == 0)
             {
                 return NotFound(new { error = $"Language with ID {id} not found." });
@@ -103,12 +102,12 @@ namespace API.Controllers
                 { "@Name", item.Name },
                 { "@Proficiency", item.Proficiency }
             };
-            var success = await _db.UpdateAsync(LanguageTable, id.ToString(), data);
+            var success = await _db.UpdateAsync(TableName.Language, id.ToString(), data);
             if (!success)
             {
                 return NotFound(new { error = $"Language with ID {id} not found." });
             }
-            var updatedItem = await _db.GetFromTableAsync(LanguageTable, id.ToString());
+            var updatedItem = await _db.GetFromTableAsync(TableName.Language, id.ToString());
             return Ok(new { message = "Language updated successfully.", data = updatedItem });
         }
     }

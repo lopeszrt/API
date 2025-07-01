@@ -27,7 +27,7 @@ namespace API.Tables
         {
             return new ProgrammingLanguage(
                 Convert.ToInt32(row["id"]),
-                row["Name"].ToString(),
+                row["Name"].ToString() ?? "",
                 Convert.ToInt32(row["Proficiency"]),
                 Convert.ToInt32(row["UserProfileId"]),
                 row.IsNull("Skill_Id") ? null : Convert.ToInt32(row["Skill_Id"]),

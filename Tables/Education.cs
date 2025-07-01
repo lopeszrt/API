@@ -31,10 +31,10 @@ namespace API.Tables
             return new Education(
                 Convert.ToInt32(row["id"]),
                 Convert.ToInt32(row["UserProfileId"]),
-                row["Degree"].ToString(),
-                row["Description"].ToString(),
-                row["Institution"].ToString(),
-                row["StartDate"].ToString(),
+                row["Degree"].ToString() ?? "",
+                row["Description"].ToString() ?? "",
+                row["Institution"].ToString() ?? "",
+                row["StartDate"].ToString() ?? "",
                 row.IsNull("EndDate") ? "" : row["EndDate"].ToString()
             );
         }

@@ -23,8 +23,8 @@ namespace API.Tables
         {
             return new Language(
                 Convert.ToInt32(row["id"]),
-                row["Name"].ToString(),
-                row["Proficiency"].ToString(),
+                row["Name"].ToString() ?? "",
+                row["Proficiency"].ToString() ?? "",
                 Convert.ToInt32(row["UserProfileId"])
             );
         }

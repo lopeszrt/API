@@ -5,21 +5,21 @@ namespace API.Models
     public class EducationRequest
     {
         [Required]
-        public string Degree { get; set; }
+        public required string Degree { get; set; }
 
         [Required]
         [StringLength(120)]
-        public string Institution { get; set; }
+        public required string Institution { get; set; }
 
         [Required]
-        public string Description { get; set; }
+        public required string Description { get; set; }
 
         [Required]
-        public string StartDate { get; set; }
+        public required string StartDate { get; set; }
 
         public string? EndDate { get; set; }
 
         [Required]
-        public int UserProfileId { get; set; }
+        public required int UserProfileId { get; set; }
     }
 }

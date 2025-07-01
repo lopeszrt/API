@@ -12,7 +12,7 @@ namespace API.Tables
         public List<ProgrammingLanguage> ProgrammingLanguages = [];
         public string? ImageUrl { get; set; }
 
-        public Project(int id, string name, string description, string link, int userProfileId, string? imageUrl = "", string? projectUrl = null)
+        public Project(int id, string name, string description, string? link, int userProfileId, string? imageUrl = "")
         {
             Id = id;
             Name = name;
@@ -20,6 +20,7 @@ namespace API.Tables
             Link = link;
             UserProfileId = userProfileId;
             ImageUrl = imageUrl;
+
         }
 
         public void AddProgrammingLanguage(ProgrammingLanguage programmingLanguage)
@@ -35,12 +36,11 @@ namespace API.Tables
         {
             return new Project(
                 Convert.ToInt32(row["id"]),
-                row["Name"].ToString(),
-                row["Description"].ToString(),
-                row.IsNull("Link") ? "" : row["Link"].ToString(),
+                row["Name"].ToString() ?? "",
+                row["Description"].ToString() ?? "",
+                row.IsNull("Link") ? "" : row["Link"].ToString() ?? "",
                 Convert.ToInt32(row["UserProfileId"]),
-                row.IsNull("ImageUrl") ? "" : row["ImageUrl"].ToString(),
-                row.IsNull("ProjectUrl") ? null : row["ProjectUrl"].ToString()
+                row.IsNull("ImageUrl") ? "" : row["ImageUrl"].ToString()
             );
         }
     }

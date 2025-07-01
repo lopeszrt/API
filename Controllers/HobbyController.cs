@@ -14,7 +14,6 @@ namespace API.Controllers
     public class HobbyController : Controller, IController<HobbyRequest>
     {
         private readonly DatabaseCalls _db;
-        private const string HobbyTable = "Hobby";
 
         public HobbyController(DatabaseCalls db)
         {
@@ -33,20 +32,20 @@ namespace API.Controllers
                 { "@Name", item.Name },
                 { "@UserProfileId", item.UserProfileId }
             };
-            var success = await _db.InsertAsync(HobbyTable, data);
+            var success = await _db.InsertAsync(TableName.Hobby, data);
             if (success == -1)
             {
                 return BadRequest(new { error = "Failed to add hobby." });
             }
             int newId = Convert.ToInt32(success);
-            var createdItem = await _db.GetFromTableAsync(HobbyTable, newId.ToString());
+            var createdItem = await _db.GetFromTableAsync(TableName.Hobby, newId.ToString());
             return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _db.DeleteAsync(HobbyTable, id.ToString());
+            var success = await _db.DeleteAsync(TableName.Hobby, id.ToString());
             if (!success)
             {
                 return NotFound(new { error = $"Hobby with ID {id} not found." });
@@ -57,7 +56,7 @@ namespace API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var res = await _db.GetFromTableAsync(HobbyTable);
+            var res = await _db.GetFromTableAsync(TableName.Hobby);
 
             return Ok(new { data = (from DataRow row in res.Rows select Hobby.CreateFromDataRow(row)).ToList() });
         }
@@ -69,7 +68,7 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Invalid ID." });
             }
-            var res = await _db.GetFromTableAsync(HobbyTable, id.ToString());
+            var res = await _db.GetFromTableAsync(TableName.Hobby, id.ToString());
             if (res.Rows.Count == 0)
             {
                 return NotFound(new { error = $"Hobby with ID {id} not found." });
@@ -88,7 +87,7 @@ namespace API.Controllers
             {
                 { "UserProfileId", profileId }
             };
-            var res = await _db.GetFromTableFilteredAsync(HobbyTable, data);
+            var res = await _db.GetFromTableFilteredAsync(TableName.Hobby, data);
             if (res.Rows.Count == 0)
             {
                 return NotFound(new { error = $"No hobbies found for User_Profile ID {profileId}." });
@@ -108,13 +107,13 @@ namespace API.Controllers
                 { "@Name", item.Name },
             };
 
-            var success = await _db.UpdateAsync(HobbyTable, id.ToString(), data);
+            var success = await _db.UpdateAsync(TableName.Hobby, id.ToString(), data);
             if (!success)
             {
                 return NotFound(new { error = $"Hobby with ID {id} not found." });
             }
 
-            var updatedItem = await _db.GetFromTableAsync(HobbyTable, id.ToString());
+            var updatedItem = await _db.GetFromTableAsync(TableName.Hobby, id.ToString());
 
             return Ok(new { message = $"Hobby with ID {id} was updated", data = updatedItem });
         }

@@ -33,8 +33,8 @@ namespace API.Tables
         {
             return new Skill(
                 Convert.ToInt32(row["id"]),
-                row["Name"].ToString(),
-                row["Description"].ToString(),
+                row["Name"].ToString() ?? "",
+                row["Description"].ToString() ?? "",
                 Convert.ToInt32(row["UserProfileId"])
             );
         }

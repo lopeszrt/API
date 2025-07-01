@@ -13,7 +13,6 @@ namespace API.Controllers
     public class EducationController : Controller, IController<EducationRequest>
     {
         private readonly DatabaseCalls _db;
-        private const string EducationTable = "Education";
 
         public EducationController(DatabaseCalls db)
         {
@@ -23,7 +22,7 @@ namespace API.Controllers
         [HttpGet()]
         public async Task<IActionResult> Get()
         {
-            var table = await _db.GetFromTableAsync(EducationTable);
+            var table = await _db.GetFromTableAsync(TableName.Education);
             return Ok(new { data = (from DataRow row in table.Rows select Education.CreateFromDataRow(row)).ToList() });
         }
 
@@ -34,7 +33,7 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Invalid ID." });
             }
-            var table = await _db.GetFromTableAsync(EducationTable, id.ToString());
+            var table = await _db.GetFromTableAsync(TableName.Education, id.ToString());
             if (table.Rows.Count == 0)
             {
                 return NotFound(new { error = $"Education with ID {id} not found." });
@@ -55,7 +54,7 @@ namespace API.Controllers
                 { "UserProfileId", profileId }
             };
 
-            var table = await _db.GetFromTableFilteredAsync(EducationTable, data);
+            var table = await _db.GetFromTableFilteredAsync(TableName.Education, data);
             if (table.Rows.Count == 0)
             {
                 return NotFound(new { error = $"No educations found for profile ID {profileId}." });
@@ -81,14 +80,14 @@ namespace API.Controllers
                 { "@EndDate", item.EndDate ?? (object)DBNull.Value}
             };
 
-            var success = await _db.UpdateAsync(EducationTable, id.ToString(), data);
+            var success = await _db.UpdateAsync(TableName.Education, id.ToString(), data);
 
             if (!success)
             {
                 return NotFound(new { error = $"Education with ID {id} not found." });
             }
 
-            var updatedItem = await _db.GetFromTableAsync(EducationTable, id.ToString());
+            var updatedItem = await _db.GetFromTableAsync(TableName.Education, id.ToString());
 
             return Ok(new { message = $"Education with {id} was updated", data = updatedItem });
         }
@@ -109,20 +108,20 @@ namespace API.Controllers
                 { "@EndDate", item.EndDate ?? "" }
             };
 
-            var success = await _db.InsertAsync(EducationTable, data);
+            var success = await _db.InsertAsync(TableName.Education, data);
             if (success == -1)
             {
                 return BadRequest(new { error = "Failed to add education" });
             }
             int newId = Convert.ToInt32(success);
-            var createdItem = await _db.GetFromTableAsync(EducationTable, newId.ToString());
+            var createdItem = await _db.GetFromTableAsync(TableName.Education, newId.ToString());
             return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _db.DeleteAsync(EducationTable, id.ToString());
+            var success = await _db.DeleteAsync(TableName.Education, id.ToString());
             if (!success)
             {
                 return NotFound(new { error = $"Education with ID {id} not found." });

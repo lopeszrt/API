@@ -14,7 +14,6 @@ namespace API.Controllers
     public class ProgrammingLanguageController : Controller, IController<ProgrammingLanguageRequest>
     {
         private readonly DatabaseCalls _db;
-        private const string ProgrammingLanguageTable = "ProgrammingLanguage";
 
         public ProgrammingLanguageController(DatabaseCalls db)
         {
@@ -45,14 +44,14 @@ namespace API.Controllers
                 return BadRequest(new { error = "Failed to add programming language." });
             }
             int newId = Convert.ToInt32(success);
-            var createdItem = await _db.GetFromTableAsync(ProgrammingLanguageTable, newId.ToString());
+            var createdItem = await _db.GetFromTableAsync(TableName.ProgrammingLanguage, newId.ToString());
             return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _db.DeleteAsync(ProgrammingLanguageTable, id.ToString());
+            var success = await _db.DeleteAsync(TableName.ProgrammingLanguage, id.ToString());
             if (!success)
             {
                 return NotFound(new { error = $"Programming Language with ID {id} not found." });
@@ -63,7 +62,7 @@ namespace API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var table = await _db.GetFromTableAsync(ProgrammingLanguageTable);
+            var table = await _db.GetFromTableAsync(TableName.ProgrammingLanguage);
             return Ok(new { data = (from DataRow row in table.Rows select ProgrammingLanguage.CreateFromDataRow(row)).ToList() });
         }
 
@@ -75,7 +74,7 @@ namespace API.Controllers
                 { "UserProfileId", profileId }
             };
 
-            var table = await _db.GetFromTableFilteredAsync(ProgrammingLanguageTable, data);
+            var table = await _db.GetFromTableFilteredAsync(TableName.ProgrammingLanguage, data);
             if (table.Rows.Count == 0)
             {
                 return NotFound(new { error = $"No programming languages found for profile ID {profileId}." });
@@ -86,7 +85,7 @@ namespace API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _db.GetFromTableAsync(ProgrammingLanguageTable, id.ToString());
+            var result = await _db.GetFromTableAsync(TableName.ProgrammingLanguage, id.ToString());
             if (result.Rows.Count == 0)
             {
                 return NotFound(new { error = $"Programming Language with ID {id} not found." });
@@ -110,12 +109,12 @@ namespace API.Controllers
                 { "@Skill_Id", item.SkillId ??(object) DBNull.Value }
             };
 
-            var success = await _db.UpdateAsync(ProgrammingLanguageTable, id.ToString(), data);
+            var success = await _db.UpdateAsync(TableName.ProgrammingLanguage, id.ToString(), data);
             if (!success)
             {
                 return NotFound(new { error = $"Programming Language with ID {id} not found." });
             }
-            var updatedItem = await _db.GetFromTableAsync(ProgrammingLanguageTable, id.ToString());
+            var updatedItem = await _db.GetFromTableAsync(TableName.ProgrammingLanguage, id.ToString());
 
             return Ok(new { message = $"Programming Language with ID {id} was updated", data = updatedItem });
         }

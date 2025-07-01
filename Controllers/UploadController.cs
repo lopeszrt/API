@@ -20,7 +20,7 @@ namespace API.Controllers
             _db = db;
 
             var uploadPath = configuration["UPLOAD_PATH"];
-            _publicBaseUrl = configuration["PUBLIC_BASE_URL"];
+            _publicBaseUrl = configuration["PUBLIC_BASE_URL"] ?? "";
 
             if (string.IsNullOrWhiteSpace(uploadPath) || string.IsNullOrWhiteSpace(_publicBaseUrl))
                 throw new InvalidOperationException("UPLOAD_PATH or PUBLIC_BASE_URL is not configured.");

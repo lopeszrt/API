@@ -5,17 +5,17 @@ namespace API.Models
     public class JobExperienceRequest
     {
         [Required, StringLength(120)]
-        public string Title { get; set; }
+        public required string Title { get; set; }
         [Required, StringLength(120)]
-        public string Company { get; set; }
+        public required string Company { get; set; }
         [Required]
-        public string Description { get; set; }
+        public required string Description { get; set; }
 
         [Required]
-        public int UserProfileId { get; set; }
+        public required int UserProfileId { get; set; }
 
         [Required]
-        public string StartDate { get; set; }
+        public required string StartDate { get; set; }
 
         public string? EndDate { get; set; }
     }

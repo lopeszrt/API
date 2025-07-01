@@ -43,6 +43,32 @@ namespace API.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        private DateTime? GetExpiryFromToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            if (!tokenHandler.CanReadToken(token)) return null;
+
+            var jwtToken = tokenHandler.ReadJwtToken(token);
+            return jwtToken.ValidTo.ToUniversalTime();
+        }
+
+        public string? RefreshToken(HttpContext context)
+        {
+            var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            var user = context.User;
+            var userid = user.FindFirst(CustomClaimTypes.UserId)?.Value;
+            var username = user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var exp = GetExpiryFromToken(token);
+
+            if (string.IsNullOrWhiteSpace(userid) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(token) || exp == null)
+                throw new UnauthorizedAccessException("Invalid token");
+
+            return exp <= DateTime.UtcNow.AddMinutes(10) ? GenerateToken(userid, username) : null;
+        }
+
+
     }
 
     public static class CustomClaimTypes

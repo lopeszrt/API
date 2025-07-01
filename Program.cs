@@ -1,9 +1,11 @@
+using API.Filters;
+using API.Middleware;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.Extensions.FileProviders;
 
 DotNetEnv.Env.Load();
 
@@ -36,7 +38,11 @@ if (jwtSettings.Exists())
     builder.Services.AddScoped<Database>();
     builder.Services.AddScoped<DatabaseCalls>();
     builder.Services.AddScoped<JwtService>();
-    builder.Services.AddControllers();
+    builder.Services.AddScoped<AddRefreshedTokenFilter>();
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<AddRefreshedTokenFilter>();
+    });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
@@ -88,6 +94,7 @@ if (jwtSettings.Exists())
 
     app.UseHttpsRedirection();
     app.UseAuthentication();
+    app.UseMiddleware<JwtRefreshMiddleware>();
     app.UseAuthorization();
     app.MapControllers();
 

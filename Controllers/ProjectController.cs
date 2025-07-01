@@ -13,7 +13,6 @@ namespace API.Controllers
     public class ProjectController : Controller, IController<ProjectRequest>
     {
         private readonly DatabaseCalls _db;
-        private const string ProjectTable = "Project";
 
         public ProjectController(DatabaseCalls db)
         {
@@ -23,7 +22,7 @@ namespace API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var table = await _db.GetFromTableAsync(ProjectTable);
+            var table = await _db.GetFromTableAsync(TableName.Project);
             return Ok(new { data = (from DataRow row in table.Rows select Project.CreateFromDataRow(row)).ToList() });
         }
 
@@ -34,7 +33,7 @@ namespace API.Controllers
             {
                 return BadRequest(new { error = "Invalid ID." });
             }
-            var table = await _db.GetFromTableAsync(ProjectTable, id.ToString());
+            var table = await _db.GetFromTableAsync(TableName.Project, id.ToString());
             if (table.Rows.Count == 0)
             {
                 return NotFound(new { error = $"Project with ID {id} not found." });
@@ -53,7 +52,7 @@ namespace API.Controllers
             {
                 { "UserProfileId", foreignId }
             };
-            var table = await _db.GetFromTableFilteredAsync(ProjectTable, data);
+            var table = await _db.GetFromTableFilteredAsync(TableName.Project, data);
             if (table.Rows.Count == 0)
             {
                 return NotFound(new { error = $"No projects found for User Profile ID {foreignId}." });
@@ -72,16 +71,16 @@ namespace API.Controllers
             {
                 { "@Name", item.Name },
                 { "@Description", item.Description },
-                { "@ImageUrl", item.ImageUrl ??(object) DBNull.Value},
-                { "@Link", item.Link ??(object) DBNull.Value}
+                { "@ImageUrl", item.ImageUrl ?? (object) DBNull.Value},
+                { "@Link", item.Link ?? (object) DBNull.Value}
             };
 
-            var success = await _db.UpdateAsync(ProjectTable, id.ToString(), data);
+            var success = await _db.UpdateAsync(TableName.Project, id.ToString(), data);
             if (!success)
             {
                 return NotFound(new { error = $"Project with ID {id} not found." });
             }
-            var updatedItem = await _db.GetFromTableAsync(ProjectTable, id.ToString());
+            var updatedItem = await _db.GetFromTableAsync(TableName.Project, id.ToString());
             return Ok(new { message = "Project updated successfully.", data = updatedItem });
         }
 
@@ -100,20 +99,20 @@ namespace API.Controllers
                 { "@UserProfileId", item.UserProfileId },
                 { "@Link", item.Link ??(object) DBNull.Value }
             };
-            var success = await _db.InsertAsync(ProjectTable, data);
+            var success = await _db.InsertAsync(TableName.Project, data);
             if (success == -1)
             {
                 return BadRequest(new { error = "Failed to add project." });
             }
             int newId = Convert.ToInt32(success);
-            var createdItem = await _db.GetFromTableAsync(ProjectTable, newId.ToString());
+            var createdItem = await _db.GetFromTableAsync(TableName.Project, newId.ToString());
             return CreatedAtAction(nameof(GetById), new {id = newId}, createdItem);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _db.DeleteAsync(ProjectTable, id.ToString());
+            var success = await _db.DeleteAsync(TableName.Project, id.ToString());
             if (!success)
             {
                 return NotFound(new { error = $"Project with ID {id} not found." });

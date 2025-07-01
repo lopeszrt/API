@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using API.Models;
+using API.Structure;
 
 namespace API.Controllers
 {
@@ -15,7 +16,6 @@ namespace API.Controllers
     {
         private readonly DatabaseCalls _db;
         private readonly JwtService _jwtService;
-        private const string UserTable = "User";
 
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] UserRequest request)
@@ -28,7 +28,7 @@ namespace API.Controllers
                 { "Username", request.Username }
             };
 
-            var result = await _db.GetFromTableFilteredAsync(UserTable, data);
+            var result = await _db.GetFromTableFilteredAsync(TableName.User, data);
 
             if (result.Rows.Count == 0)
             {
@@ -41,7 +41,7 @@ namespace API.Controllers
             var user = LoginRequest.CreateFromDataRow(result.Rows[0]);
             var userId = result.Rows[0]["id"].ToString();
 
-            if (!user.checkHashed(request.Password))
+            if (userId == null || !user.CheckHashed(request.Password))
             {
                 return Unauthorized(new
                 {
@@ -66,6 +66,7 @@ namespace API.Controllers
                 return Unauthorized(new { error = "Invalid token." });
             }
 
+
             return Ok(new { userId });
         }
 
@@ -85,7 +86,7 @@ namespace API.Controllers
                 { "Username", user.Username }
             };
 
-            var res = await _db.GetFromTableFilteredAsync(UserTable, data);
+            var res = await _db.GetFromTableFilteredAsync(TableName.User, data);
 
             if (res.Rows.Count > 0)
             {
@@ -98,9 +99,9 @@ namespace API.Controllers
             data = new Dictionary<string, object>
             {
                 { "@Username", user.Username },
-                { "@Password", LoginRequest.hashPassword(user.Password) }
+                { "@Password", LoginRequest.HashPassword(user.Password) }
             };
-            var success = await _db.InsertAsync(UserTable, data);
+            var success = await _db.InsertAsync(TableName.User, data);
             if (success == -1)
             {
                 return BadRequest(new
@@ -135,7 +136,7 @@ namespace API.Controllers
             {
                 { "id", userId }
             };
-            var result = await _db.GetFromTableFilteredAsync(UserTable, data);
+            var result = await _db.GetFromTableFilteredAsync(TableName.User, data);
 
             if (result.Rows.Count == 0)
             {
@@ -143,17 +144,17 @@ namespace API.Controllers
             }
 
             var loginRequest = LoginRequest.CreateFromDataRow(result.Rows[0]);
-            if (!loginRequest.checkHashed(request.OldPassword))
+            if (!loginRequest.CheckHashed(request.OldPassword))
             {
                 return Unauthorized(new { error = "Old password is incorrect." });
             }
 
             data = new Dictionary<string, object>
             {
-                { "@Password", LoginRequest.hashPassword(request.NewPassword) }
+                { "@Password", LoginRequest.HashPassword(request.NewPassword) }
             };
 
-            var success = await _db.UpdateAsync(UserTable, userId,data);
+            var success = await _db.UpdateAsync(TableName.User, userId,data);
 
             if (!success)
             {
