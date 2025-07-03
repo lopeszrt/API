@@ -4,12 +4,14 @@ using API.Tables;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using API.Filters;
 using API.Models;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [CheckUserIdFilter(TableName.Education)]
     public class EducationController : Controller, IController<EducationRequest>
     {
         private readonly DatabaseCalls _db;

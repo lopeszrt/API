@@ -3,6 +3,7 @@ using API.Tables;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
+using API.Filters;
 using API.Models;
 using API.Structure;
 

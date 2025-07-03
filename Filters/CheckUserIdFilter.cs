@@ -7,16 +7,18 @@ using System.Security.Claims;
 
 namespace API.Filters
 {
-    public class CheckUserIdFilter: IAsyncActionFilter
+    public class CheckUserIdFilter: Attribute, IAsyncAuthorizationFilter
     {
-        private readonly JwtService _jwtService;
+            private readonly string _table;
+            private readonly string _idParam;
 
-        public CheckUserIdFilter(JwtService jwtService)
-        {
-            _jwtService = jwtService;
-        }
+            public CheckUserIdFilter(string table, string idParam = "profileId")
+            {
+                _table = table;
+                _idParam = idParam;
+            }
 
-        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+            public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
             var endpoint = context.HttpContext.GetEndpoint();
             if (endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
@@ -24,36 +26,41 @@ namespace API.Filters
                 return;
             }
 
-            var db = context.HttpContext.RequestServices.GetRequiredService<DatabaseCalls>();
+            var db = context.HttpContext.RequestServices.GetService<DatabaseCalls>();
             var user = context.HttpContext.User;
-            if (user.Identity?.IsAuthenticated != true)
+
+            if (db == null || !user.Identity.IsAuthenticated)
             {
                 context.Result = new UnauthorizedResult();
                 return;
             }
-            var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if(string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId) || userId <= 0)
+
+            var profileId = user.FindFirst(CustomClaimTypes.UserProfileId)?.Value;
+            if (string.IsNullOrEmpty(profileId))
             {
-                context.Result = new BadRequestObjectResult(new { error = "Invalid User ID." });
+                context.Result = new BadRequestObjectResult("User profile ID is missing.");
                 return;
             }
 
             var routeValues = context.RouteData.Values;
-            if (routeValues.TryGetValue("id", out var idValue) && idValue is string idStr && int.TryParse(idStr, out var id) && id > 0)
+            if (!routeValues.TryGetValue(_idParam, out var idObj) || !int.TryParse(idObj?.ToString(), out var resourceId))
             {
-                // Check if the user has access to the resource with the given ID
-                var hasAccess = await db.CheckUserAccessAsync(userId, id);
-                if (!hasAccess)
-                {
-                    context.Result = new ForbidResult();
-                    return;
-                }
-            }
-            else
-            {
-                // If no ID is provided, just continue
-                await next();
+                context.Result = new BadRequestObjectResult($"Missing or invalid '{_idParam}' parameter.");
                 return;
+            }
+
+            var record = await db.GetFromTableAsync(_table, resourceId.ToString());
+            if (record.Rows.Count == 0)
+            {
+                context.Result = new NotFoundObjectResult($"Record with ID {resourceId} not found.");
+                return;
+            }
+
+            var ownerProfileId = record.Rows[0]["UserProfileId"]?.ToString();
+            if (!string.Equals(ownerProfileId, profileId, StringComparison.Ordinal))
+
+            {
+                context.Result = new ForbidResult();
             }
         }
     }
