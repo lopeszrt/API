@@ -28,7 +28,7 @@ namespace API.Controllers
             return Ok(new { status = "Healthy", timestamp = DateTime.UtcNow });
         }
 
-        [Authorize]
+        [Authorize(Roles ="Admin")]
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll()
         {

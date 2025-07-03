@@ -19,7 +19,9 @@ namespace API.Controllers
             _db = db;
         }
 
-        [HttpGet()]
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
         public async Task<IActionResult> Get()
         {
             var table = await _db.GetFromTableAsync(TableName.Education);
@@ -31,7 +33,7 @@ namespace API.Controllers
         {
             if (id <= 0)
             {
-                return BadRequest(new { error = "Invalid ID." });
+                return NotFound(new { error = "Invalid ID." });
             }
             var table = await _db.GetFromTableAsync(TableName.Education, id.ToString());
             if (table.Rows.Count == 0)

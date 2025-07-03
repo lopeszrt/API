@@ -64,6 +64,7 @@ namespace API.Controllers
             return Ok(new { message = $"Profile with ID {id} was deleted." });
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> Get()
         {

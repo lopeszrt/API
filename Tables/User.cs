@@ -7,6 +7,8 @@ namespace API.Tables
         public string Username { get; set; }
         public string Password { get; set; }
 
+        public string Role { get; set; }
+
         public bool CheckHashed(string password)
         {
             return BCrypt.Net.BCrypt.Verify(password, this.Password);
@@ -17,17 +19,19 @@ namespace API.Tables
             return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
-        public LoginRequest(string username, string password)
+        public LoginRequest(string username, string password, string role)
         {
             Username = username;
             Password = password;
+            Role = role;
         }
 
         public static LoginRequest CreateFromDataRow(DataRow row)
         {
             return new LoginRequest(
                 row["Username"].ToString() ?? "",
-                row["Password"].ToString() ?? ""
+                row["Password"].ToString() ?? "",
+                row["Role"].ToString() ?? ""
             );
         }
     }

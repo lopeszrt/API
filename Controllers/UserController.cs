@@ -1,9 +1,10 @@
-﻿using API.Services;
+﻿using API.Models;
+using API.Services;
 using API.Structure;
 using API.Tables;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
-using API.Models;
 
 namespace API.Controllers
 {
@@ -57,6 +58,7 @@ namespace API.Controllers
             return Ok(new { message = $"User with ID {id} was deleted." });
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> Get()
         {

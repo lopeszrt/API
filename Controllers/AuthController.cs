@@ -41,7 +41,15 @@ namespace API.Controllers
             var user = LoginRequest.CreateFromDataRow(result.Rows[0]);
             var userId = result.Rows[0]["id"].ToString();
 
-            if (userId == null || !user.CheckHashed(request.Password))
+            var udata = new Dictionary<string, object>
+            {
+                { "UserId", userId }
+            };
+
+            var profileRes = await _db.GetFromTableFilteredAsync(TableName.UserProfile, udata);
+            var profile = profileRes.Rows.Count > 0 ? UserProfile.CreateFromDataRow(profileRes.Rows[0]) : null;
+
+            if (profile == null || !user.CheckHashed(request.Password))
             {
                 return Unauthorized(new
                 {
@@ -49,12 +57,12 @@ namespace API.Controllers
                 });
             }
 
-            var tokenString = _jwtService.GenerateToken(userId, user.Username);
+            var tokenString = _jwtService.GenerateToken(userId, user.Username, user.Role, profile.Id.ToString());
 
             return Ok(new { token = tokenString, userId });
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin, User")]
         [HttpGet]
         public IActionResult TokenLogin()
         {
@@ -110,12 +118,34 @@ namespace API.Controllers
                 });
             }
 
-            string token = _jwtService.GenerateToken(success.ToString(), user.Username);
+            var udata = new Dictionary<string, object>
+            {
+                { "UserId", success.ToString() },
+                { "Name", user.Username },
+                { "Description", "" },
+                { "Email", ""},
+                { "Phone", "" },
+                { "Location", "" },
+                { "LinkedIn", "" }, 
+                { "GitHub", "" },
+                { "Route", Guid.NewGuid().ToString() }
+            };
+
+            var profileSuccess = await _db.InsertAsync(TableName.UserProfile, udata);
+            if (profileSuccess == -1)
+            {
+                return StatusCode(503,new
+                {
+                    error = "Failed to create user profile."
+                });
+            }
+
+            string token = _jwtService.GenerateToken(success.ToString(), user.Username, "User", profileSuccess.ToString());
 
             return Ok(new
             {
                 message = "User registered successfully.",
-                token = token
+                token
             });
         }
 

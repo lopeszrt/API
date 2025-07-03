@@ -14,20 +14,22 @@ namespace API.Services
             _config = config;
         }
 
-        public string GenerateToken(string userId, string username)
+        public string GenerateToken(string userId, string username, string role, string profileId)
         {
             var section = _config.GetSection("JwtSettings");
 
             var secretKey = section["SecretKey"] ?? throw new Exception("Missing JWT SecretKey.");
             var issuer = section["Issuer"] ?? "default_issuer";
             var audience = section["Audience"] ?? "default_audience";
-            var ExpiryMinutes = int.Parse(section["ExpiryMinutes"] ?? "60");
+            var expiryMinutes = int.Parse(section["ExpiryMinutes"] ?? "60");
 
             var claims = new[]
             {
                 new Claim(CustomClaimTypes.UserId, userId),
+                new Claim(ClaimTypes.Role, role),
                 new Claim(JwtRegisteredClaimNames.Sub, username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(CustomClaimTypes.UserProfileId, profileId)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -37,14 +39,14 @@ namespace API.Services
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(ExpiryMinutes),
+                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
                 signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private DateTime? GetExpiryFromToken(string token)
+        private static DateTime? GetExpiryFromToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             if (!tokenHandler.CanReadToken(token)) return null;
@@ -55,17 +57,19 @@ namespace API.Services
 
         public string? RefreshToken(HttpContext context)
         {
-            var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var token = context.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
 
             var user = context.User;
             var userid = user.FindFirst(CustomClaimTypes.UserId)?.Value;
             var username = user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var role = user.FindFirst(ClaimTypes.Role)?.Value;
+            var profileId = user.FindFirst(CustomClaimTypes.UserProfileId)?.Value;
             var exp = GetExpiryFromToken(token);
 
-            if (string.IsNullOrWhiteSpace(userid) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(token) || exp == null)
+            if (string.IsNullOrWhiteSpace(userid) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(role) || exp == null || string.IsNullOrWhiteSpace(profileId))
                 throw new UnauthorizedAccessException("Invalid token");
 
-            return exp <= DateTime.UtcNow.AddMinutes(10) ? GenerateToken(userid, username) : null;
+            return exp <= DateTime.UtcNow.AddMinutes(10) ? GenerateToken(userid, username, role, profileId) : null;
         }
 
 
@@ -74,5 +78,6 @@ namespace API.Services
     public static class CustomClaimTypes
     {
         public const string UserId = "id";
+        public const string UserProfileId = "user_profile_id";
     }
 }

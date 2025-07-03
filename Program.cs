@@ -64,12 +64,12 @@ if (jwtSettings.Exists())
         };
     });
 
-    builder.Services.AddAuthorization(options =>
-    {
-        options.FallbackPolicy = new AuthorizationPolicyBuilder()
+    builder.Services.AddAuthorizationBuilder()
+        .SetFallbackPolicy(new AuthorizationPolicyBuilder()
             .RequireAuthenticatedUser()
-            .Build();
-    });
+            .RequireRole("User")
+            .Build());
+
 
     var app = builder.Build();
 
