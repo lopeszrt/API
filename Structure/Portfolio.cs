@@ -4,7 +4,7 @@ namespace API.Structure
 {
     public class Portfolio
     {
-        public Portfolio(UserProfile profile, List<Education> lstEducations, List<JobExperience> lstJobExperiences, List<Hobby> lstHobbies, List<Skill> lstSkills, List<Language> lstLanguages, List<Project> lstProjects)
+        public Portfolio(UserProfile profile, List<Project> lstProjects)
         {
             Name = profile.Name;
             Email = profile.PublicEmail ? profile.Email : "";
@@ -14,11 +14,6 @@ namespace API.Structure
             GitHub = profile.GitHub;
             Description = profile.Description;
             ImageUrl = profile.ImageUrl;
-            Educations = lstEducations ?? [];
-            JobExperiences = lstJobExperiences ?? [];
-            Hobbies = lstHobbies ?? [];
-            Skills = lstSkills ?? [];
-            Languages = lstLanguages ?? [];
             Projects = lstProjects ?? [];
 
         }
@@ -31,11 +26,6 @@ namespace API.Structure
         public string GitHub;
         public string Description;
         public string ImageUrl;
-        public List<Education> Educations;
-        public List<JobExperience> JobExperiences;
-        public List<Hobby> Hobbies;
-        public List<Skill> Skills;
-        public List<Language> Languages;
         public List<Project> Projects;
     }
 }

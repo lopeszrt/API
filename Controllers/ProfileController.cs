@@ -107,32 +107,11 @@ namespace API.Controllers
             var fdata = new Dictionary<string, object> { { "UserProfileId", profileId } };
 
             var profileRes = await _db.GetFromTableAsync(TableName.UserProfile, profileId.ToString());
-            var educationsRes = await _db.GetFromTableFilteredAsync(TableName.Education, fdata);
-            var hobbiesRes = await _db.GetFromTableFilteredAsync(TableName.Hobby, fdata);
-            var skillsRes = await _db.GetFromTableFilteredAsync(TableName.Skill, fdata);
-            var jobExperienceRes = await _db.GetFromTableFilteredAsync(TableName.JobExperience, fdata);
-            var languagesRes = await _db.GetFromTableFilteredAsync(TableName.Language, fdata);
             var projectsRes = await _db.GetFromTableFilteredAsync(TableName.Project, fdata);
             var programmingLanguagesRes = await _db.GetFromTableFilteredAsync(TableName.ProgrammingLanguage, fdata);
-
             var profile = UserProfile.CreateFromDataRow(profileRes.Rows[0]);
-            var skills = new List<Skill>();
             var projects = new List<Project>();
-            var hobbies = (from DataRow row in hobbiesRes.Rows select Hobby.CreateFromDataRow(row)).ToList();
-            var educations = (from DataRow ed in educationsRes.Rows select Education.CreateFromDataRow(ed)).ToList();
             var programmingLanguages = (from DataRow pgl in programmingLanguagesRes.Rows select ProgrammingLanguage.CreateFromDataRow(pgl)).ToList();
-            var jobExperiences = (from DataRow job in jobExperienceRes.Rows select JobExperience.CreateFromDataRow(job)).ToList();
-            var languages = (from DataRow lang in languagesRes.Rows select Language.CreateFromDataRow(lang)).ToList();
-
-            foreach (DataRow sk in skillsRes.Rows)
-            {
-                var skill = Skill.CreateFromDataRow(sk);
-                foreach (var pgl in programmingLanguages)
-                {
-                    skill.AddProgrammingLanguage(pgl);
-                }
-                skills.Add(skill);
-            }
 
             foreach (DataRow proj in projectsRes.Rows)
             {
@@ -145,7 +124,7 @@ namespace API.Controllers
             }
             return Ok(new
             {
-                data = new Portfolio(profile, educations, jobExperiences, hobbies, skills, languages, projects)
+                data = new Portfolio(profile, projects)
             });
         }
 

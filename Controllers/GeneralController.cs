@@ -36,11 +36,6 @@ namespace API.Controllers
             {
                 users = Auxiliar.DataTableToList(await _dbCalls.GetFromTableAsync(TableName.User)),
                 userProfiles = Auxiliar.DataTableToList(await _dbCalls.GetFromTableAsync(TableName.UserProfile)),
-                skills = Auxiliar.DataTableToList(await _dbCalls.GetFromTableAsync(TableName.Skill)),
-                hobbies = Auxiliar.DataTableToList(await _dbCalls.GetFromTableAsync(TableName.Hobby)),
-                educations = Auxiliar.DataTableToList(await _dbCalls.GetFromTableAsync(TableName.Education)),
-                jobExperiences = Auxiliar.DataTableToList(await _dbCalls.GetFromTableAsync(TableName.JobExperience)),
-                languages = Auxiliar.DataTableToList(await _dbCalls.GetFromTableAsync(TableName.Language)),
                 projects = Auxiliar.DataTableToList(await _dbCalls.GetFromTableAsync(TableName.Project)),
                 programmingLanguages = Auxiliar.DataTableToList(await _dbCalls.GetFromTableAsync(TableName.ProgrammingLanguage))
             };
