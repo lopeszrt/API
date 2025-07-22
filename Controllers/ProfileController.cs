@@ -111,14 +111,14 @@ namespace API.Controllers
             var programmingLanguagesRes = await _db.GetFromTableFilteredAsync(TableName.ProgrammingLanguage, fdata);
             var profile = UserProfile.CreateFromDataRow(profileRes.Rows[0]);
             var projects = new List<Project>();
-            var programmingLanguages = (from DataRow pgl in programmingLanguagesRes.Rows select ProgrammingLanguage.CreateFromDataRow(pgl)).ToList();
+            var skills = (from DataRow pgl in programmingLanguagesRes.Rows select Skill.CreateFromDataRow(pgl)).ToList();
 
             foreach (DataRow proj in projectsRes.Rows)
             {
                 var project = Project.CreateFromDataRow(proj);
-                foreach (var pgl in programmingLanguages)
+                foreach (var sk in skills)
                 {
-                    project.AddProgrammingLanguage(pgl);
+                    project.AddSkill(sk);
                 }
                 projects.Add(project);
             }

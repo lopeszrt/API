@@ -9,7 +9,7 @@ namespace API.Tables
         public string Description { get; set; }
         public string? Link { get; set; }
         public readonly int UserProfileId;
-        public List<ProgrammingLanguage> ProgrammingLanguages = [];
+        public List<Skill> Skills = [];
         public string? ImageUrl { get; set; }
 
         public Project(int id, string name, string description, string? link, int userProfileId, string? imageUrl = "")
@@ -23,12 +23,12 @@ namespace API.Tables
 
         }
 
-        public void AddProgrammingLanguage(ProgrammingLanguage programmingLanguage)
+        public void AddSkill(Skill programmingLanguage)
         {
-            ProgrammingLanguages ??= [];
+            Skills ??= [];
             if (programmingLanguage.ProjectId == Id)
             {
-                ProgrammingLanguages.Add(programmingLanguage);
+                Skills.Add(programmingLanguage);
             }
         }
 

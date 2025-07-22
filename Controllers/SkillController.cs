@@ -11,17 +11,17 @@ namespace API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
-    public class ProgrammingLanguageController : Controller, IController<ProgrammingLanguageRequest>
+    public class SkillController : Controller, IController<SkillRequest>
     {
         private readonly DatabaseCalls _db;
 
-        public ProgrammingLanguageController(DatabaseCalls db)
+        public SkillController(DatabaseCalls db)
         {
             _db = db;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] ProgrammingLanguageRequest item)
+        public async Task<IActionResult> Add([FromBody] SkillRequest item)
         {
             if (!ModelState.IsValid)
             {
@@ -34,7 +34,6 @@ namespace API.Controllers
                 { "@UserProfileId", item.UserProfileId },
                 { "@Proficiency", item.Proficiency },
                 { "@Project_Id", item.ProjectId ?? (object) DBNull.Value},
-                { "@Skill_Id", item.SkillId ?? (object) DBNull.Value }
             };
 
             var success = await _db.InsertAsync("ProgrammingLanguage", data);
@@ -63,7 +62,7 @@ namespace API.Controllers
         public async Task<IActionResult> Get()
         {
             var table = await _db.GetFromTableAsync(TableName.ProgrammingLanguage);
-            return Ok(new { data = (from DataRow row in table.Rows select ProgrammingLanguage.CreateFromDataRow(row)).ToList() });
+            return Ok(new { data = (from DataRow row in table.Rows select Skill.CreateFromDataRow(row)).ToList() });
         }
 
         [HttpGet("profile/{profileId}")]
@@ -79,7 +78,7 @@ namespace API.Controllers
             {
                 return NotFound(new { error = $"No programming languages found for profile ID {profileId}." });
             }
-            return Ok(new { data = (from DataRow row in table.Rows select ProgrammingLanguage.CreateFromDataRow(row)).ToList() });
+            return Ok(new { data = (from DataRow row in table.Rows select Skill.CreateFromDataRow(row)).ToList() });
         }
 
         [HttpGet("{id}")]
@@ -91,11 +90,11 @@ namespace API.Controllers
                 return NotFound(new { error = $"Programming Language with ID {id} not found." });
             }
 
-            return Ok(new { data = ProgrammingLanguage.CreateFromDataRow(result.Rows[0]) });
+            return Ok(new { data = Skill.CreateFromDataRow(result.Rows[0]) });
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id,[FromBody] ProgrammingLanguageRequest item)
+        public async Task<IActionResult> Update(int id,[FromBody] SkillRequest item)
         {
             if (id <= 0 || !ModelState.IsValid)
             {
@@ -105,8 +104,7 @@ namespace API.Controllers
             {
                 { "@Name", item.Name },
                 { "@Proficiency", item.Proficiency },
-                { "@Project_Id", item.ProjectId ??(object) DBNull.Value },
-                { "@Skill_Id", item.SkillId ??(object) DBNull.Value }
+                { "@Project_Id", item.ProjectId ??(object) DBNull.Value }
             };
 
             var success = await _db.UpdateAsync(TableName.ProgrammingLanguage, id.ToString(), data);

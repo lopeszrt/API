@@ -2,7 +2,7 @@
 
 namespace API.Models
 {
-    public class ProgrammingLanguageRequest
+    public class SkillRequest
     {
         [Required, StringLength(100)]
         public string Name { get; set; }
@@ -12,8 +12,6 @@ namespace API.Models
 
         [Required]
         public int UserProfileId { get; set; }
-
-        public int? SkillId { get; set; }
 
         public int? ProjectId { get; set; }
     }
